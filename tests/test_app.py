@@ -1,10 +1,16 @@
 import os
-import tempfile
+import sys
 import pytest
-from app import app, db, User, Task
+import tempfile
+
+# Adiciona o diretório raiz ao PATH
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from task_manager.app import app, db, User, Task
 
 @pytest.fixture
 def test_client():
+    """Fixture para criar um cliente de teste"""
     db_fd, app.config['DATABASE'] = tempfile.mkstemp()
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + app.config['DATABASE']
