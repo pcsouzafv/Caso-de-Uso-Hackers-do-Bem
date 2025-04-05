@@ -124,25 +124,35 @@ jobs:
     - name: Build package
       run: |
         python setup.py sdist bdist_wheel
-    
+
+    - name: Verify package
+      id: verify_pkg
+      run: |
+        if [ -f ./dist/*.whl ]; then
+          echo "package=$(ls ./dist/*.whl)" >> $GITHUB_OUTPUT
+          echo "Package found: $(ls ./dist/*.whl)"
+        else
+          echo "No .whl files found in dist/"
+          exit 0
+        fi
+
     - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/v') && steps.verify_pkg.outputs.package != ''
       uses: actions/create-release@v1
+      id: create_release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-    
+
     - name: Upload Release Asset
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/v') && steps.verify_pkg.outputs.package != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/*.whl
+        asset_path: ${{ steps.verify_pkg.outputs.package }}
         asset_name: task_manager.whl
         asset_content_type: application/octet-stream
