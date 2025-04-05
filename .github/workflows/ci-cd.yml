@@ -78,6 +78,30 @@ jobs:
         file: ./coverage.xml
         fail_ci_if_error: true
 
+    - name: Install security tools
+      run: |
+        pip install bandit owasp-dependency-check
+
+    - name: Run Bandit SAST
+      run: |
+        bandit -r . -f json -o bandit_results.json
+
+    - name: Run OWASP Dependency Check
+      run: |
+        dependency-check --scan . --format JSON --out dependency-check-report.json
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v2
+      with:
+        name: security-reports
+        path: |
+          bandit_results.json
+          dependency-check-report.json
+
+  security-analysis:
+    needs: test
+    uses: ./.github/workflows/security.yml
+
   build:
     needs: test
     runs-on: ubuntu-latest

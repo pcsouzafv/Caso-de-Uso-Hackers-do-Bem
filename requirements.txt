@@ -19,3 +19,7 @@ black==23.7.0
 isort==5.12.0
 selenium==4.11.2
 webdriver-manager==4.0.0
+
+# Ferramentas de segurança
+bandit==1.7.5
+ownasp-dependency-check==8.2.1
