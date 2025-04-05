@@ -1,98 +1,149 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Administrador - Gerenciador de Tarefas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <title>Painel do Administrador - Task Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <div class="user-info">
-                <h2>Painel do Administrador</h2>
-                <p>{{ current_user.username }}</p>
-            </div>
-
-            <div class="admin-actions">
-                <form action="{{ url_for('add_user') }}" method="POST">
-                    <h3>Adicionar Usuário</h3>
-                    <div class="form-group">
-                        <label for="username">Nome de Usuário:</label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Senha:</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="is_admin"> Administrador
-                        </label>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Adicionar Usuário</button>
-                </form>
-
-                <a href="{{ url_for('logout') }}" class="btn btn-danger">Sair</a>
+    <header class="header">
+        <div class="header-content">
+            <h1>Painel do Administrador</h1>
+            <div class="header-actions">
+                <button class="theme-toggle btn-icon" aria-label="Alternar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-outline">
+                    <i class="fas fa-tasks"></i>
+                    Voltar para Tarefas
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline btn-danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sair
+                </a>
             </div>
         </div>
+    </header>
 
-        <div class="content">
-            <div class="admin-tabs">
-                <button class="tab-btn active" data-tab="users">Usuários</button>
-                <button class="tab-btn" data-tab="tasks">Tarefas</button>
-                <button class="tab-btn" data-tab="logs">Logs do Sistema</button>
+    <main class="container">
+        <!-- Estatísticas -->
+        <section class="stats-grid">
+            <div class="stats-card">
+                <i class="fas fa-users"></i>
+                <h3>{{ total_users }}</h3>
+                <p>Usuários</p>
             </div>
+            <div class="stats-card">
+                <i class="fas fa-tasks"></i>
+                <h3>{{ total_tasks }}</h3>
+                <p>Total de Tarefas</p>
+            </div>
+            <div class="stats-card">
+                <i class="fas fa-check-circle"></i>
+                <h3>{{ completed_tasks }}</h3>
+                <p>Tarefas Concluídas</p>
+            </div>
+        </section>
 
-            <div id="users" class="tab-content active">
-                <h3>Gerenciar Usuários</h3>
+        <!-- Abas -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="users">
+                <i class="fas fa-users"></i>
+                Usuários
+            </button>
+            <button class="tab-btn" data-tab="tasks">
+                <i class="fas fa-tasks"></i>
+                Tarefas
+            </button>
+            <button class="tab-btn" data-tab="logs">
+                <i class="fas fa-history"></i>
+                Logs do Sistema
+            </button>
+        </div>
+
+        <!-- Conteúdo das Abas -->
+        <section id="users" class="tab-content active">
+            <div class="card">
+                <h2>Gerenciar Usuários</h2>
+                <form action="{{ url_for('add_user') }}" method="POST" class="user-form">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="Nome de usuário" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="password" placeholder="Senha" required>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" name="is_admin" id="is_admin" class="sr-only">
+                        <label for="is_admin">
+                            <span class="custom-checkbox"></span>
+                            Conceder privilégios de administrador
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Adicionar Usuário
+                    </button>
+                </form>
+
                 <div class="user-list">
                     {% for user in users %}
                     <div class="user-item">
                         <div class="user-info">
-                            <strong>{{ user.username }}</strong>
-                            <span class="badge {% if user.is_admin %}admin{% endif %}">
+                            <span>{{ user.username }}</span>
+                            <span class="user-role {% if user.is_admin %}admin-role{% endif %}">
                                 {{ 'Administrador' if user.is_admin else 'Usuário' }}
                             </span>
                         </div>
-                        {% if user.id != current_user.id %}
-                        <a href="{{ url_for('delete_user', id=user.id) }}" class="btn btn-sm btn-delete" onclick="return confirm('Tem certeza que deseja excluir este usuário?')">Excluir</a>
-                        {% endif %}
+                        <div class="user-actions">
+                            {% if user.id != current_user.id %}
+                            <button class="btn btn-icon btn-danger" onclick="deleteUser('{{ user.id }}')" title="Excluir usuário">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+        </section>
 
-            <div id="tasks" class="tab-content">
-                <h3>Todas as Tarefas</h3>
+        <section id="tasks" class="tab-content">
+            <div class="card">
+                <h2>Todas as Tarefas</h2>
                 <div class="task-list">
                     {% for task in tasks %}
                     <div class="task-item {% if task.completed %}completed{% endif %}">
-                        <div class="task-header">
-                            <h4>{{ task.title }}</h4>
-                            <div class="task-meta">
-                                <span class="task-user">Usuário: {{ task.user.username }}</span>
-                                <div class="task-actions">
-                                    <a href="{{ url_for('toggle_task', id=task.id) }}" class="btn btn-sm btn-toggle">
-                                        {{ 'Marcar como Pendente' if task.completed else 'Marcar como Concluída' }}
-                                    </a>
-                                    <a href="{{ url_for('delete_task', id=task.id) }}" class="btn btn-sm btn-delete" onclick="return confirm('Tem certeza que deseja excluir esta tarefa?')">Excluir</a>
-                                </div>
-                            </div>
+                        <div class="task-info">
+                            <span class="task-title">{{ task.title }}</span>
+                            <small>por {{ task.user.username }}</small>
+                            {% if task.description %}
+                            <p class="task-description">{{ task.description }}</p>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span class="task-due-date">
+                                <i class="fas fa-calendar"></i> {{ task.due_date.strftime('%d/%m/%Y') }}
+                            </span>
+                            {% endif %}
                         </div>
-                        {% if task.description %}
-                        <p class="task-description">{{ task.description }}</p>
-                        {% endif %}
-                        {% if task.due_date %}
-                        <p class="task-due-date">Vence em: {{ task.due_date.strftime('%d/%m/%Y') }}</p>
-                        {% endif %}
+                        <div class="task-actions">
+                            <button class="btn btn-icon btn-success" onclick="toggleTaskStatus('{{ task.id }}')" title="Alternar status">
+                                <i class="fas {% if task.completed %}fa-times{% else %}fa-check{% endif %}"></i>
+                            </button>
+                            <button class="btn btn-icon btn-danger" onclick="deleteTask('{{ task.id }}')" title="Excluir tarefa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+        </section>
 
-            <div id="logs" class="tab-content">
-                <h3>Logs do Sistema</h3>
+        <section id="logs" class="tab-content">
+            <div class="card">
+                <h2>Logs do Sistema</h2>
                 <div class="log-list">
                     {% for log in logs %}
                     <div class="log-item">
@@ -105,24 +156,23 @@
                     {% endfor %}
                 </div>
             </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>Siga Ricardo Souza:</p>
+            <p>
+                <a href="https://www.linkedin.com/in/pcricardo2024/" target="_blank" rel="noopener">LinkedIn</a> |
+                <a href="https://github.com/pcsouzafv" target="_blank" rel="noopener">GitHub</a>
+            </p>
+            <p>Desenvolvido por <strong>Ricardo Souza</strong> - Especialização DevSecOps</p>
+            <p>Professora: <a href="https://www.linkedin.com/in/helena-carreco/" target="_blank" rel="noopener">Helena Carreço</a></p>
         </div>
-    </div>
+    </footer>
 
-    <script>
-        document.querySelectorAll('.tab-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                // Atualiza botão ativo
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
+    <div id="toast" class="toast"></div>
 
-                // Mostra conteúdo da aba
-                const tabId = button.dataset.tab;
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

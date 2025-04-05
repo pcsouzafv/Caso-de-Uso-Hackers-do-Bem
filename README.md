@@ -1,80 +1,58 @@
-# Sistema de Gerenciamento de Tarefas
+# Caso de Uso - Hackers do Bem
 
-Uma aplicação web para gerenciar suas tarefas diárias, construída com FastAPI e SQLite.
+Sistema de Gerenciamento de Tarefas adaptado para o curso Hackers do Bem.
 
 ## Funcionalidades
 
-### Para Usuários:
-- Cadastrar nova tarefa
-- Editar tarefas existentes
-- Marcar tarefas como concluídas
-- Remover tarefas obsoletas
-- Visualizar tarefas pendentes
-- Buscar tarefas por palavras-chave
+- Autenticação de usuários
+- Painel de administração
+- Gerenciamento de tarefas
+- Interface moderna e responsiva
+- Tema claro/escuro
+- Estatísticas em tempo real
 
-### Para Administradores:
-- Visualizar todas as contas de usuário
-- Remover contas de usuários inativos ou suspeitos
-- Acessar os logs do sistema
+## Tecnologias
 
-## Requisitos
+- Python 3.x
+- Flask 2.0.1
+- SQLAlchemy
+- HTML5/CSS3
+- JavaScript
+- GitHub Actions (CI/CD)
 
-Execute o seguinte comando para instalar as bibliotecas necessárias:
+## Instalação
 
-```
+```bash
+# Clone o repositório
+git clone https://github.com/pcsouzafv/Caso-de-Uso-Hackers-do-Bem.git
+
+# Entre no diretório
+cd Caso-de-Uso-Hackers-do-Bem
+
+# Instale as dependências
 pip install -r requirements.txt
+
+# Execute a aplicação
+python app.py
 ```
 
-## Uso
+## Pipeline CI/CD
 
-1. Clone o repositório
+O projeto utiliza GitHub Actions para:
+- Testes automatizados
+- Análise de código
+- Build e release
 
-2. Instale as dependências
-   ```
-   pip install -r requirements.txt
-   ```
+Para mais detalhes, consulte [CI_CD.md](CI_CD.md).
 
-3. Crie um usuário administrador (opcional)
-   ```
-   python create_admin.py nome_usuario senha
-   ```
+## Contribuição
 
-4. Inicie o backend:
-   ```
-   uvicorn main:app --reload
-   ```
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Crie um Pull Request
 
-5. Acesse o frontend através de um servidor web simples:
-   ```
-   python -m http.server 8080 --directory static
-   ```
+## Licença
 
-6. Acesse a aplicação em seu navegador:
-   - Frontend: http://localhost:8080
-   - API (documentação): http://localhost:8000/docs
-
-## Tecnologias Utilizadas
-
-- **Backend**: FastAPI, SQLAlchemy, SQLite
-- **Frontend**: HTML, CSS, JavaScript
-- **Autenticação**: JWT
-
-## API Endpoints
-
-### Autenticação
-- `POST /token` - Obter token de acesso
-- `POST /users/` - Criar novo usuário
-
-### Tarefas
-- `GET /tasks/` - Listar todas as tarefas do usuário atual
-- `POST /tasks/` - Criar nova tarefa
-- `GET /tasks/{task_id}` - Obter detalhes de uma tarefa
-- `PUT /tasks/{task_id}` - Atualizar tarefa existente
-- `DELETE /tasks/{task_id}` - Excluir tarefa
-- `GET /tasks/pending/` - Listar tarefas pendentes
-- `GET /tasks/search/` - Buscar tarefas por palavra-chave
-
-### Administração
-- `GET /admin/users/` - Listar todos os usuários
-- `DELETE /admin/users/{user_id}` - Remover usuário
-- `GET /admin/logs/` - Acessar logs do sistema
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.

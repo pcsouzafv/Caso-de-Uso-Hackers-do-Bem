@@ -1,34 +1,92 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Gerenciador de Tarefas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <div class="container">
-        <div class="login-form">
-            <h1>Gerenciador de Tarefas</h1>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-danger">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            <form method="POST" action="{{ url_for('login') }}">
-                <div class="form-group">
-                    <label for="username">Usuário:</label>
-                    <input type="text" id="username" name="username" required>
+        <div class="login-container">
+            <div class="login-box">
+                <div class="hackers-bem-tribute">
+                    <h2 class="tribute-title">Hackers do Bem</h2>
+                    <p class="tribute-text">Este projeto foi desenvolvido durante o curso Hackers do Bem</p>
+                    <p class="tribute-thanks">Agradecimento especial à iniciativa que está formando a próxima geração de profissionais em Segurança da Informação</p>
                 </div>
-                <div class="form-group">
-                    <label for="password">Senha:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Entrar</button>
-            </form>
+
+                <h1>Gerenciador de Tarefas</h1>
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-danger">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="form-group">
+                        <label for="username">Usuário:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Senha:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                </form>
+            </div>
         </div>
     </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>Siga Ricardo Souza:</p>
+            <p>
+                <a href="https://www.linkedin.com/in/pcricardo2024/" target="_blank" rel="noopener">LinkedIn</a> |
+                <a href="https://github.com/pcsouzafv" target="_blank" rel="noopener">GitHub</a>
+            </p>
+            <p>Desenvolvido por <strong>Ricardo Souza</strong> - Especialização DevSecOps</p>
+            <p>Professora: <a href="https://www.linkedin.com/in/helena-carreco/" target="_blank" rel="noopener">Helena Carreço</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Função para alternar o tema
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.querySelector('.theme-toggle i');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Carregar tema salvo
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const icon = document.querySelector('.theme-toggle i');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        });
+    </script>
 </body>
 </html>
