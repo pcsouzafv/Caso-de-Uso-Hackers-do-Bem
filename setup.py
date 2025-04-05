@@ -1,3 +1,9 @@
+"""
+Configuração do pacote Task Manager
+
+Este arquivo define as configurações de empacotamento para o projeto Task Manager,
+incluindo dependências e metadados.
+"""
 from setuptools import setup, find_packages
 
 setup(
@@ -5,6 +11,10 @@ setup(
     version="1.0.0",
     packages=find_packages(),
     include_package_data=True,
+    package_data={
+        'task_manager': ['py.typed'],
+    },
+    zip_safe=False,
     install_requires=[
         'Flask==2.0.1',
         'Flask-SQLAlchemy==2.5.1',
