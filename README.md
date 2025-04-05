@@ -1,65 +1,80 @@
-# Task-Manager-using-Flask
+# Sistema de Gerenciamento de Tarefas
 
-A simple web application to store your To-Do Tasks .
+Uma aplicação web para gerenciar suas tarefas diárias, construída com FastAPI e SQLite.
 
-# Features
+## Funcionalidades
 
-- User Authentication
-- Easy to use and deploy locally.
+### Para Usuários:
+- Cadastrar nova tarefa
+- Editar tarefas existentes
+- Marcar tarefas como concluídas
+- Remover tarefas obsoletas
+- Visualizar tarefas pendentes
+- Buscar tarefas por palavras-chave
 
-# Requirements
+### Para Administradores:
+- Visualizar todas as contas de usuário
+- Remover contas de usuários inativos ou suspeitos
+- Acessar os logs do sistema
 
-Execute the following command to install the required third party libraries:
+## Requisitos
 
-```pip3 install -r requirements.txt```
+Execute o seguinte comando para instalar as bibliotecas necessárias:
 
-# Usage
+```
+pip install -r requirements.txt
+```
 
-1. Clone the repository using the following command
-    
-    ```git clone https://github.com/AdityaBagad/Task-Manager-using-Flask.git```
+## Uso
 
-2. Install the dependencies using
+1. Clone o repositório
 
-    ```cd  Task-Manager-using-Flask```
-    
-    ```pip3 install -r requirements.txt```
+2. Instale as dependências
+   ```
+   pip install -r requirements.txt
+   ```
 
-3. Run this command to start the application
+3. Crie um usuário administrador (opcional)
+   ```
+   python create_admin.py nome_usuario senha
+   ```
 
-    ```cd todo_project```
+4. Inicie o backend:
+   ```
+   uvicorn main:app --reload
+   ```
 
-    ```python run.py```
+5. Acesse o frontend através de um servidor web simples:
+   ```
+   python -m http.server 8080 --directory static
+   ```
 
-# Results
+6. Acesse a aplicação em seu navegador:
+   - Frontend: http://localhost:8080
+   - API (documentação): http://localhost:8000/docs
 
-## Registration Page
-Login or Register if you dont have an account
+## Tecnologias Utilizadas
 
-![Registration Page](output/register.jpg)
+- **Backend**: FastAPI, SQLAlchemy, SQLite
+- **Frontend**: HTML, CSS, JavaScript
+- **Autenticação**: JWT
 
-## Accessing URL's 
-User cannot access any URL's if they are not logged in
+## API Endpoints
 
-![Invalid Access](output/invalid-access.jpg)
+### Autenticação
+- `POST /token` - Obter token de acesso
+- `POST /users/` - Criar novo usuário
 
-## After Successfull Login
-See all your tasks after successfull login.
+### Tarefas
+- `GET /tasks/` - Listar todas as tarefas do usuário atual
+- `POST /tasks/` - Criar nova tarefa
+- `GET /tasks/{task_id}` - Obter detalhes de uma tarefa
+- `PUT /tasks/{task_id}` - Atualizar tarefa existente
+- `DELETE /tasks/{task_id}` - Excluir tarefa
+- `GET /tasks/pending/` - Listar tarefas pendentes
+- `GET /tasks/search/` - Buscar tarefas por palavra-chave
 
-![After Login](output/after-login.jpg)
-
-## Add Tasks
-Click the **Add Task** link in the side-bar to add tasks
-
-![Image of Yaktocat](output/add-task.jpg)
-
-## View All Tasks
-Click the **View All Task** link in the side-bar to see all tasks. You can **Update** and **Delete** Tasks from this page.
-
-![Image of Yaktocat](output/all-tasks.jpg)
-
-## Account Settings
-Change your username and password. You can access this by clicking dropdown in the Navbar
-
-![Image of Yaktocat](output/account-settings.jpg)
-
+### Administração
+- `GET /admin/users/` - Listar todos os usuários
+- `DELETE /admin/users/{user_id}` - Remover usuário
+- `GET /admin/logs/` - Acessar logs do sistema

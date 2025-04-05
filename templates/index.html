@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="user-info">
+                <h2>Bem-vindo, {{ current_user.username }}</h2>
+            </div>
+            <div class="task-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total de Tarefas:</span>
+                    <span class="stat-value">{{ total_tasks }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tarefas Pendentes:</span>
+                    <span class="stat-value">{{ pending_tasks }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tarefas Concluídas:</span>
+                    <span class="stat-value">{{ completed_tasks }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Sair</a>
+        </nav>
+        
+        <main class="content">
+            <div class="task-form">
+                <h2>Nova Tarefa</h2>
+                <form method="POST" action="{{ url_for('add_task') }}">
+                    <div class="form-group">
+                        <label for="title">Título:</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Descrição:</label>
+                        <textarea id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="due_date">Data de Vencimento:</label>
+                        <input type="date" id="due_date" name="due_date">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Tarefa</button>
+                </form>
+            </div>
+
+            <div class="task-list">
+                <h2>Minhas Tarefas</h2>
+                <div class="task-filters">
+                    <button class="filter-btn active" data-filter="all">Todas</button>
+                    <button class="filter-btn" data-filter="pending">Pendentes</button>
+                    <button class="filter-btn" data-filter="completed">Concluídas</button>
+                </div>
+                {% for task in tasks %}
+                <div class="task-item {% if task.completed %}completed{% endif %}">
+                    <div class="task-header">
+                        <h3>{{ task.title }}</h3>
+                        <div class="task-actions">
+                            <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-toggle">
+                                    {% if task.completed %}Desfazer{% else %}Concluir{% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-delete">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                    <p class="task-description">{{ task.description }}</p>
+                    {% if task.due_date %}
+                    <p class="task-due-date">Vence em: {{ task.due_date.strftime('%d/%m/%Y') }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const filter = button.dataset.filter;
+                const tasks = document.querySelectorAll('.task-item');
+
+                tasks.forEach(task => {
+                    if (filter === 'all') {
+                        task.style.display = 'block';
+                    } else if (filter === 'completed') {
+                        task.style.display = task.classList.contains('completed') ? 'block' : 'none';
+                    } else if (filter === 'pending') {
+                        task.style.display = !task.classList.contains('completed') ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
