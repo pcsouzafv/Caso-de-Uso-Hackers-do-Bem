@@ -53,6 +53,7 @@ jobs:
           wget https://github.com/jeremylong/DependencyCheck/releases/latest/download/dependency-check-7.4.4-release.zip
           unzip dependency-check-7.4.4-release.zip
           echo "$PWD/dependency-check/bin" >> $GITHUB_PATH
+          dependency-check --version || echo "Instalação do Dependency-Check falhou"
 
       - name: Run Dependency-Check
         run: |

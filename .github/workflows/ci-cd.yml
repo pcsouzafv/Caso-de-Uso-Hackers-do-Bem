@@ -109,7 +109,7 @@ jobs:
 
   security-analysis:
     needs: test
-    uses: ./.github/workflows/security.yml
+    uses: ./.github/workflows/security.yml@main
 
   build:
     needs: test
