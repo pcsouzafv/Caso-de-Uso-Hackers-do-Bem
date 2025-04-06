@@ -1,0 +1,37 @@
+[bandit]
+skip = tests/,__pycache__/,venv/,mypy_cache/
+exclude = tests/,__pycache__/,venv/,mypy_cache/
+confidence = medium
+severity = medium
+
+[bandit.blacklist]
+plugins =
+    assert_used
+    blacklisted_imports
+    blacklist
+    exec_used
+    hard_coded_password
+    hardcoded_bind_all_interfaces
+    hardcoded_password_default
+    hardcoded_password_func_arg
+    hardcoded_password_string
+    httpoxy
+    import_telnet
+    jinja2_autoescape_false
+    nested_except
+    open_with_perm
+    paramiko_calls
+    pickle
+    random_module
+    requests_without_timeout
+    ssl_with_bad_version
+    ssl_with_no_version
+    subprocess_without_shell_equals_true
+    try_except_continue
+    try_except_pass
+    try_except_raise
+    use_of_eval
+    weak_cryptographic_key_sizes
+    weak_hash
+    weak_cipher
+    weak_random

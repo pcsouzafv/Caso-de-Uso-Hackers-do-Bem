@@ -1,10 +1,37 @@
 stages:
   - test
+  - security
   - build
   - deploy
 
 variables:
   DOCKER_IMAGE: registry.gitlab.com/devops-team/task-manager:$CI_COMMIT_REF_SLUG
+
+# Análise de Segurança
+bandit-scan:
+  stage: security
+  image: python:3.13
+  script:
+    - pip install bandit
+    - bandit -r app.py models.py config.py tests/ -f json > bandit_report.json
+    - cat bandit_report.json
+  artifacts:
+    paths:
+      - bandit_report.json
+    reports:
+      sast: bandit_report.json
+
+dependency-check:
+  stage: security
+  image: owasp/dependency-check
+  script:
+    - dependency-check --project "Task Manager" --scan . --format "JSON" --out dependency-check-report.json
+    - cat dependency-check-report.json
+  artifacts:
+    paths:
+      - dependency-check-report.json
+    reports:
+      dependency_scanning: dependency-check-report.json
 
 test:
   stage: test
@@ -12,7 +39,7 @@ test:
   before_script:
     - pip install -r requirements.txt
   script:
-    - python -m pytest tests/
+    - python -m pytest tests/ --cov=app --cov-report=term-missing
 
 build-docker:
   stage: build
