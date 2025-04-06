@@ -1,17 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort
+from flask_login import login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from models import db, User, Task, SystemLog
-from config import Config
-
-app = Flask(__name__)
-app.config.from_object(Config)
-
-db.init_app(app)
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+from app import app, db, login_manager
+from app.models import User, Task, SystemLog
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -210,25 +202,3 @@ def delete_user(user_id):
     db.session.commit()
     
     return jsonify({'success': True})
-
-@app.route('/health')
-def health_check():
-    """Rota para verificar se o servidor está pronto"""
-    return {'status': 'healthy'}, 200
-
-def create_admin():
-    with app.app_context():
-        db.create_all()
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-            admin = User(
-                username='admin',
-                is_admin=True
-            )
-            admin.set_password('admin')
-            db.session.add(admin)
-            db.session.commit()
-
-if __name__ == '__main__':
-    create_admin()
-    app.run(host='0.0.0.0', port=8080, debug=True)
