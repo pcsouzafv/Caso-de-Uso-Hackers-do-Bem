@@ -1,6 +1,6 @@
 # Sistema de Gerenciamento de Tarefas
 
-Uma aplicação web para gerenciar suas tarefas diárias, construída com FastAPI e SQLite.
+Uma aplicação web para gerenciar suas tarefas diárias, construída com Flask e SQLite.
 
 ## Funcionalidades
 
@@ -19,9 +19,12 @@ Uma aplicação web para gerenciar suas tarefas diárias, construída com FastAP
 
 ## Requisitos
 
+- Python 3.8+
+- pip
+
 Execute o seguinte comando para instalar as bibliotecas necessárias:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -30,32 +33,55 @@ pip install -r requirements.txt
 1. Clone o repositório
 
 2. Instale as dependências
-   ```
+   ```bash
    pip install -r requirements.txt
    ```
 
-3. Crie um usuário administrador (opcional)
-   ```
-   python create_admin.py nome_usuario senha
-   ```
-
-4. Inicie o backend:
-   ```
-   uvicorn main:app --reload
+3. Configure as variáveis de ambiente (opcional)
+   ```bash
+   cp config.py.example config.py
    ```
 
-5. Acesse o frontend através de um servidor web simples:
-   ```
-   python -m http.server 8080 --directory static
+4. Inicie o servidor de desenvolvimento:
+   ```bash
+   python app.py
    ```
 
-6. Acesse a aplicação em seu navegador:
-   - Frontend: http://localhost:8080
-   - API (documentação): http://localhost:8000/docs
+5. Acesse a aplicação em http://localhost:5000
+
+## Estrutura do Projeto
+
+```
+.
+├── app/                # Código principal da aplicação
+│   ├── __init__.py    # Inicialização do Flask
+│   ├── models.py      # Modelos do SQLAlchemy
+│   └── routes.py      # Rotas da aplicação
+├── tests/             # Testes da aplicação
+│   ├── functional/    # Testes funcionais
+│   ├── integration/   # Testes de integração
+│   └── unit/          # Testes unitários
+├── config.py          # Configurações da aplicação
+└── requirements.txt   # Dependências do projeto
+```
+
+## Testes
+
+Para executar os testes:
+
+```bash
+pytest
+```
+
+Para gerar relatório de cobertura:
+
+```bash
+pytest --cov=app
+```
 
 ## Tecnologias Utilizadas
 
-- **Backend**: FastAPI, SQLAlchemy, SQLite
+- **Backend**: Flask, SQLAlchemy, SQLite
 - **Frontend**: HTML, CSS, JavaScript
 - **Autenticação**: JWT
 
@@ -78,3 +104,7 @@ pip install -r requirements.txt
 - `GET /admin/users/` - Listar todos os usuários
 - `DELETE /admin/users/{user_id}` - Remover usuário
 - `GET /admin/logs/` - Acessar logs do sistema
+
+## Licença
+
+MIT
