@@ -1,0 +1,64 @@
+name: Security Analysis
+
+on:
+  workflow_call: # Permite ser chamado pelo ci-cd.yml
+  workflow_dispatch: # Permite acionamento manual
+  schedule:
+    - cron: '0 0 * * 0' # Executa todo domingo à meia-noite
+
+jobs:
+  bandit-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          
+      - name: Install Bandit
+        run: pip install bandit
+        
+      - name: Run Bandit Scan
+        run: |
+          bandit -r task_manager/ -x tests/ -f json -o bandit_results.json || echo "Bandit encontrou vulnerabilidades"
+          
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit_results.json
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@v3
+        with:
+          project: 'Task Manager Security Scan'
+          path: '.'
+          format: 'JSON'
+          # Configuração para falhar em vulnerabilidades críticas (CVSS >= 7.0)
+          # Parâmetro oficial da versão 3.1.0:
+          failOnCVSS: 7
+          
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: dependency-check-report
+          path: dependency-check-report.json
+
+  notify-on-failure:
+    if: failure()
+    needs: [bandit-scan, dependency-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Security Failure
+        run: |
+          echo "Security checks failed! Check the artifacts for details."
+          exit 1
