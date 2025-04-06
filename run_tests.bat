@@ -1,0 +1,3 @@
+@echo off
+echo Running tests with detailed output...
+python -m pytest tests/ -v --tb=short --show-capture=all -s
