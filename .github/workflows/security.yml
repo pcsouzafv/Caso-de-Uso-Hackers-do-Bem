@@ -1,10 +1,10 @@
 name: Security Analysis
 
 on:
-  workflow_call: {}
-  workflow_dispatch: # Permite acionamento manual
-  schedule:
-    - cron: '0 0 * * 0' # Executa todo domingo à meia-noite
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   bandit-scan:
@@ -15,75 +15,33 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
           
-      - name: Install Bandit
-        run: pip install bandit
-        
-      - name: Run Bandit Scan
+      - name: Run Bandit
         run: |
-          bandit -r task_manager/ -x tests/ -f json -o bandit_results.json || echo "Bandit encontrou vulnerabilidades"
-          
-      - name: Verify Network Connection
-        run: |
-          ping github.com -c 3 || echo "Verificação de conexão falhou"
+          pip install bandit
+          bandit -r . -f json -o bandit-results.json
           
       - name: Upload Bandit Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        continue-on-error: true
+        uses: actions/upload-artifact@v3
         with:
           name: bandit-report
-          path: bandit_results.json
-          
-      - name: Upload Dependency Check Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: dependency-check-report
-          path: dependency-check-report.json
+          path: bandit-results.json
 
   dependency-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install OWASP Dependency-Check
-        run: |
-          wget https://github.com/jeremylong/DependencyCheck/releases/latest/download/dependency-check-7.4.4-release.zip
-          unzip dependency-check-7.4.4-release.zip
-          echo "$PWD/dependency-check/bin" >> $GITHUB_PATH
-          dependency-check --version || echo "Instalação do Dependency-Check falhou"
-
-      - name: Run Dependency-Check
-        run: |
-          dependency-check.sh --scan . --format JSON --out dependency-check-report.json --project "Task Manager" --failOnCVSS 7
-
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'Task Manager Security Scan'
+          path: '.'
+          format: 'JSON'
+          
       - name: Upload Dependency Check Report
-        uses: actions/upload-artifact@v4
-        if: always()
+        uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
           path: dependency-check-report.json
-
-  notify-on-failure:
-    if: always()
-    needs: [bandit-scan, dependency-check]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Analyze Security Results
-        run: |
-          echo "Relatório de Segurança"
-          echo "===================="
-          
-          if [ -f bandit_results.json ]; then
-            echo "\nBandit encontrou $(jq '.results | length' bandit_results.json) vulnerabilidades"
-          else
-            echo "\nBandit: Relatório não gerado"
-          fi
-          
-          if [ -f dependency-check-report.json ]; then
-            echo "\nDependency-Check encontrou $(jq '.dependencies | map(select(.vulnerabilities)) | length' dependency-check-report.json) dependências vulneráveis"
-          else
-            echo "\nDependency-Check: Relatório não gerado"
-          fi
