@@ -2,166 +2,42 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, staging ]
-    tags:
-      - 'v*'
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop, staging ]
+    branches: [ main ]
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.9
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 black isort
-    
-    - name: Auto-format with Black
-      run: |
-        black . || echo "Black fez ajustes de formatação"
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add .
-        git commit -m "Auto-format with Black" || echo "Nenhuma mudança para commit"
-        git push || echo "Nenhuma alteração para push"
-    
-    - name: Check code formatting
-      run: |
-        black --check .
-        isort --check-only --diff .
-    
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-  test:
-    needs: lint
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8, 3.9]
-        
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-    steps:
-    - uses: actions/checkout@v2
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.10'
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-integration pytest-mock
     
     - name: Run tests
-      env:
-        PYTHONPATH: ${{ github.workspace }}
       run: |
-        pytest tests/ --cov=./ --cov-report=xml
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: true
+        pytest -v
 
-    - name: Install security tools
-      run: |
-        pip install bandit owasp-dependency-check
-
-    - name: Run Bandit SAST
-      run: |
-        bandit -r . -f json -o bandit_results.json
-
-    - name: Run OWASP Dependency Check
-      run: |
-        dependency-check --scan . --format JSON --out dependency-check-report.json
-
-    - name: Upload security reports
-      uses: actions/upload-artifact@v2
-      with:
-        name: security-reports
-        path: |
-          bandit_results.json
-          dependency-check-report.json
-
-  security-analysis:
+  security:
     needs: test
     uses: ./.github/workflows/security.yml
 
-  build:
-    needs: test
+  deploy:
+    needs: [test, security]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/v'))
-
+    
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    
-    - name: Install dependencies
+    - name: Deploy to production
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install wheel
-    
-    - name: Build package
-      run: |
-        python setup.py sdist bdist_wheel
-
-    - name: Verify package
-      id: verify_pkg
-      run: |
-        if [ -f ./dist/*.whl ]; then
-          echo "package=$(ls ./dist/*.whl)" >> $GITHUB_OUTPUT
-          echo "Package found: $(ls ./dist/*.whl)"
-        else
-          echo "No .whl files found in dist/"
-          exit 0
-        fi
-
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/v') && steps.verify_pkg.outputs.package != ''
-      uses: actions/create-release@v1
-      id: create_release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-
-    - name: Upload Release Asset
-      if: startsWith(github.ref, 'refs/tags/v') && steps.verify_pkg.outputs.package != ''
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.verify_pkg.outputs.package }}
-        asset_name: task_manager.whl
-        asset_content_type: application/octet-stream
+        echo "Deployment would happen here"

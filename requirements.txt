@@ -1,4 +1,4 @@
-Flask==2.0.1
+Flask==2.3.2
 Flask-SQLAlchemy==2.5.1
 Flask-Login==0.6.3
 Werkzeug==2.0.1
@@ -22,5 +22,5 @@ selenium==4.11.2
 webdriver-manager==4.0.0
 
 # Ferramentas de segurança
-bandit==1.7.5
-OWASP-Dependency-Check==7.4.4  # Corrigido nome do pacote
+bandit==1.7.6
+safety==2.3.5
