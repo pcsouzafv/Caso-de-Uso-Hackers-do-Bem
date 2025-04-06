@@ -1,5 +1,11 @@
-# Package initialization
+"""Pacote Task Manager"""
+from flask_sqlalchemy import SQLAlchemy
 
-from .app import app, db, User, Task
+# Inicializa a extensão SQLAlchemy
+db = SQLAlchemy()
 
-__all__ = ["app", "db", "User", "Task"]
+# Importa os modelos e a aplicação depois para evitar circular imports
+from .app import create_app
+from .models import User, Task
+
+__all__ = ["db", "User", "Task", "create_app"]
