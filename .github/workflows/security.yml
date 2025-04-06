@@ -1,7 +1,7 @@
 name: Security Analysis
 
 on:
-  workflow_call: # Permite ser chamado pelo ci-cd.yml
+  workflow_call: {}
   workflow_dispatch: # Permite acionamento manual
   schedule:
     - cron: '0 0 * * 0' # Executa todo domingo à meia-noite
