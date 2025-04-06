@@ -66,11 +66,23 @@ jobs:
           path: dependency-check-report.json
 
   notify-on-failure:
-    if: failure()
+    if: always()
     needs: [bandit-scan, dependency-check]
     runs-on: ubuntu-latest
     steps:
-      - name: Notify Security Failure
+      - name: Analyze Security Results
         run: |
-          echo "Security checks failed! Check the artifacts for details."
-          exit 1
+          echo "Relatório de Segurança"
+          echo "===================="
+          
+          if [ -f bandit_results.json ]; then
+            echo "\nBandit encontrou $(jq '.results | length' bandit_results.json) vulnerabilidades"
+          else
+            echo "\nBandit: Relatório não gerado"
+          fi
+          
+          if [ -f dependency-check-report.json ]; then
+            echo "\nDependency-Check encontrou $(jq '.dependencies | map(select(.vulnerabilities)) | length' dependency-check-report.json) dependências vulneráveis"
+          else
+            echo "\nDependency-Check: Relatório não gerado"
+          fi
