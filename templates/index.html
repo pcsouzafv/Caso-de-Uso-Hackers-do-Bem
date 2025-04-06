@@ -4,104 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Manager</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <nav class="sidebar">
-            <div class="user-info">
-                <h2>Bem-vindo, {{ current_user.username }}</h2>
-            </div>
-            <div class="task-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Total de Tarefas:</span>
-                    <span class="stat-value">{{ total_tasks }}</span>
+        <header class="header">
+            <div class="header-content">
+                <div class="user-info">
+                    <h1>Bem-vindo, {{ current_user.username }}</h1>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Tarefas Pendentes:</span>
-                    <span class="stat-value">{{ pending_tasks }}</span>
+                <div class="header-actions">
+                    <button class="theme-toggle btn-icon" aria-label="Alternar tema">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">
+                        <i class="fas fa-user-shield"></i>
+                        Painel Admin
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline btn-danger">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Sair
+                    </a>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Tarefas Concluídas:</span>
-                    <span class="stat-value">{{ completed_tasks }}</span>
+                <div class="stats-summary">
+                    <div class="stat-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Total: <span class="stat-value" id="total-tasks">{{ tasks|length }}</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Concluídas: <span class="stat-value" id="completed-tasks">{{ tasks|selectattr('completed', 'true')|list|length }}</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Pendentes: <span class="stat-value" id="pending-tasks">{{ tasks|selectattr('completed', 'false')|list|length }}</span></span>
+                    </div>
                 </div>
             </div>
-            <a href="{{ url_for('logout') }}" class="btn btn-danger">Sair</a>
-        </nav>
-        
-        <main class="content">
-            <div class="task-form">
-                <h2>Nova Tarefa</h2>
-                <form method="POST" action="{{ url_for('add_task') }}">
-                    <div class="form-group">
-                        <label for="title">Título:</label>
-                        <input type="text" id="title" name="title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="description">Descrição:</label>
-                        <textarea id="description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="due_date">Data de Vencimento:</label>
-                        <input type="date" id="due_date" name="due_date">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Adicionar Tarefa</button>
-                </form>
-            </div>
+        </header>
 
-            <div class="task-list">
+        <main class="main-content">
+            <section class="new-task-section">
+                <h2>Nova Tarefa</h2>
+                <form class="new-task-form" action="{{ url_for('add_task') }}" method="POST">
+                    <div class="form-group">
+                        <input type="text" name="title" placeholder="Título da tarefa" required class="form-control" aria-label="Título da tarefa">
+                    </div>
+                    <div class="form-group">
+                        <textarea name="description" placeholder="Descrição (opcional)" class="form-control" aria-label="Descrição da tarefa"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="date" name="due_date" class="form-control" aria-label="Data de vencimento">
+                    </div>
+                    <button type="submit" class="btn">Adicionar Tarefa</button>
+                </form>
+            </section>
+
+            <section class="tasks-section">
                 <h2>Minhas Tarefas</h2>
-                <div class="task-filters">
-                    <button class="filter-btn active" data-filter="all">Todas</button>
-                    <button class="filter-btn" data-filter="pending">Pendentes</button>
-                    <button class="filter-btn" data-filter="completed">Concluídas</button>
+                <div class="tabs">
+                    <button class="tab-btn active" data-filter="all">
+                        <i class="fas fa-list"></i>
+                        Todas
+                    </button>
+                    <button class="tab-btn" data-filter="pending">
+                        <i class="fas fa-clock"></i>
+                        Pendentes
+                    </button>
+                    <button class="tab-btn" data-filter="completed">
+                        <i class="fas fa-check-circle"></i>
+                        Concluídas
+                    </button>
                 </div>
-                {% for task in tasks %}
-                <div class="task-item {% if task.completed %}completed{% endif %}">
-                    <div class="task-header">
-                        <h3>{{ task.title }}</h3>
+
+                <div class="task-list">
+                    {% for task in tasks %}
+                    <div class="task-item {% if task.completed %}completed{% endif %}" data-task-id="{{ task.id }}" data-completed="{{ 'true' if task.completed else 'false' }}">
+                        <div class="task-content">
+                            <h3 class="task-title">{{ task.title }}</h3>
+                            {% if task.description %}
+                            <p class="task-description">{{ task.description }}</p>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span class="task-due-date">
+                                <i class="fas fa-calendar"></i> {{ task.due_date.strftime('%d/%m/%Y') }}
+                            </span>
+                            {% endif %}
+                        </div>
                         <div class="task-actions">
-                            <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" style="display: inline;">
-                                <button type="submit" class="btn btn-toggle">
-                                    {% if task.completed %}Desfazer{% else %}Concluir{% endif %}
-                                </button>
-                            </form>
-                            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: inline;">
-                                <button type="submit" class="btn btn-delete">Excluir</button>
-                            </form>
+                            <button class="btn btn-icon btn-success" onclick="toggleTaskStatus('{{ task.id }}')" title="{% if task.completed %}Desfazer tarefa{% else %}Concluir tarefa{% endif %}">
+                                <i class="fas {% if task.completed %}fa-undo{% else %}fa-check{% endif %}"></i>
+                            </button>
+                            <button class="btn btn-icon btn-danger" onclick="deleteTask('{{ task.id }}')" title="Excluir tarefa">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                    <p class="task-description">{{ task.description }}</p>
-                    {% if task.due_date %}
-                    <p class="task-due-date">Vence em: {{ task.due_date.strftime('%d/%m/%Y') }}</p>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
+            </section>
         </main>
+
+        <footer>
+            <div class="footer-container">
+                <p>Siga Ricardo Souza:</p>
+                <p>
+                    <a href="https://www.linkedin.com/in/pcricardo2024/" target="_blank" rel="noopener">LinkedIn</a> |
+                    <a href="https://github.com/pcsouzafv" target="_blank" rel="noopener">GitHub</a>
+                </p>
+                <p>Desenvolvido por <strong>Ricardo Souza</strong> - Especialização DevSecOps</p>
+                <p>Professora: <a href="https://www.linkedin.com/in/helena-carreco/" target="_blank" rel="noopener">Helena Carreço</a></p>
+            </div>
+        </footer>
+
+        <div id="toast" class="toast"></div>
+
     </div>
 
-    <script>
-        document.querySelectorAll('.filter-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove active class from all buttons
-                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                const filter = button.dataset.filter;
-                const tasks = document.querySelectorAll('.task-item');
-
-                tasks.forEach(task => {
-                    if (filter === 'all') {
-                        task.style.display = 'block';
-                    } else if (filter === 'completed') {
-                        task.style.display = task.classList.contains('completed') ? 'block' : 'none';
-                    } else if (filter === 'pending') {
-                        task.style.display = !task.classList.contains('completed') ? 'block' : 'none';
-                    }
-                });
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
