@@ -110,7 +110,7 @@ def live_server(test_app: Flask) -> Generator[str, None, None]:
     # Verificar se o servidor está respondendo
     import requests
     try:
-        response = requests.get('http://localhost:5000/health')
+        response = requests.get('http://localhost:5000/health', timeout=5)
         assert response.status_code == 200
     except requests.exceptions.ConnectionError:
         pytest.fail("Server failed to start")

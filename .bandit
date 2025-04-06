@@ -19,19 +19,3 @@ plugins =
     import_telnet
     jinja2_autoescape_false
     nested_except
-    open_with_perm
-    paramiko_calls
-    pickle
-    random_module
-    requests_without_timeout
-    ssl_with_bad_version
-    ssl_with_no_version
-    subprocess_without_shell_equals_true
-    try_except_continue
-    try_except_pass
-    try_except_raise
-    use_of_eval
-    weak_cryptographic_key_sizes
-    weak_hash
-    weak_cipher
-    weak_random
