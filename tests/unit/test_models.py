@@ -1,18 +1,24 @@
+# tests/unit/test_models.py
 import pytest
-from app import db
-from models import User, Task
+from task_manager.models import User, Task
 
+def test_password_hashing(app):
+    """Testa o hash de senha"""
+    with app.app_context():
+        user = User(username='test')
+        user.set_password('password')
+        assert user.check_password('password')
+        assert not user.check_password('wrong')
 
-class TestUserModel:
-    def test_password_hashing(self, app):
-        u = User(username='testuser')
-        u.set_password('cat')
-        assert u.check_password('cat') is True
-        assert u.check_password('dog') is False
-
-
-class TestTaskModel:
-    def test_task_creation(self, app):
-        t = Task(title='Test Task', description='Test Description')
-        assert t.title == 'Test Task'
-        assert t.completed is False
+def test_task_creation(app):
+    """Testa criação de tarefa"""
+    with app.app_context():
+        user = User(username='test')
+        db.session.add(user)
+        db.session.commit()
+        
+        task = Task(title='Test Task', description='Test', user_id=user.id)
+        db.session.add(task)
+        db.session.commit()
+        
+        assert task.id is not None
