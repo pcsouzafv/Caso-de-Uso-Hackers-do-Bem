@@ -1,10 +1,13 @@
 # tests/integration/test_views.py
+import pytest
+from task_manager.models import User, Task
+
 def test_task_workflow(test_client):
     """Teste do fluxo completo de tarefas"""
     # Criar usuário
     user = User(username="workflow_user")
     user.set_password("password123")
-    with app.app_context():
+    with test_client.application.app_context():
         db.session.add(user)
         db.session.commit()
 
@@ -28,7 +31,7 @@ def test_task_workflow(test_client):
     assert response.status_code == 200
 
     # Verificar se a tarefa foi criada
-    with app.app_context():
+    with test_client.application.app_context():
         task = Task.query.filter_by(title="Integration Test Task").first()
         assert task is not None
         task_id = task.id
@@ -38,7 +41,7 @@ def test_task_workflow(test_client):
     assert response.status_code == 200
 
     # Verificar se foi marcada
-    with app.app_context():
+    with test_client.application.app_context():
         task = Task.query.get(task_id)
         assert task.completed == True
 
@@ -47,6 +50,6 @@ def test_task_workflow(test_client):
     assert response.status_code == 200
 
     # Verificar se a tarefa foi excluída
-    with app.app_context():
+    with test_client.application.app_context():
         task = Task.query.get(task_id)
         assert task is None
