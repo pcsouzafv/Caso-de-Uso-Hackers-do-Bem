@@ -1,26 +1,34 @@
-# tests/conftest.py
-import pytest
-import os
-import sys
-from task_manager import create_app, db
-from task_manager.models import User, Task
+# task_manager/__init__.py
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_migrate import Migrate
 
-# Adiciona o diretório pai ao path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+db = SQLAlchemy()
+login_manager = LoginManager()
 
-@pytest.fixture
-def app():
-    app = create_app({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'WTF_CSRF_ENABLED': False,
-        'SECRET_KEY': 'test'
+def create_app(config=None):
+    app = Flask(__name__)
+    
+    # Configurações básicas
+    app.config.update({
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///tasks.db',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'SECRET_KEY': 'dev',
+        'WTF_CSRF_ENABLED': True
     })
-    with app.app_context():
-        db.create_all()
-        yield app
-        db.drop_all()
-
-@pytest.fixture
-def client(app):
-    return app.test_client()
+    
+    # Aplica configurações customizadas se fornecidas
+    if config:
+        app.config.update(config)
+    
+    # Inicializa extensões
+    db.init_app(app)
+    login_manager.init_app(app)
+    Migrate(app, db)
+    
+    # Importa e registra blueprints
+    from task_manager import routes
+    app.register_blueprint(routes.bp)
+    
+    return app

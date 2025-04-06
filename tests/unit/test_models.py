@@ -22,3 +22,4 @@ def test_task_creation(app):
         db.session.commit()
         
         assert task.id is not None
+        assert task.user_id == user.id
