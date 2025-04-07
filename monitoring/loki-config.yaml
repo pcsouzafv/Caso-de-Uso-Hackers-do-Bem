@@ -2,7 +2,10 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
+<<<<<<< HEAD
   grpc_listen_port: 9096
+=======
+>>>>>>> master
 
 common:
   path_prefix: /tmp/loki
@@ -15,6 +18,7 @@ common:
     instance_addr: 127.0.0.1
     kvstore:
       store: inmemory
+<<<<<<< HEAD
     heartbeat_period: 10s
 
 tables:
@@ -27,11 +31,34 @@ ruler:
     type: local
     local:
       directory: /tmp/loki/rules
+=======
+    heartbeat_period: 1s
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /tmp/loki/index
+    cache_location: /tmp/loki/cache
+    cache_ttl: 24h
+    shared_store: filesystem
+  filesystem:
+    directory: /tmp/loki/chunks
+>>>>>>> master
 
 compactor:
   working_directory: /tmp/loki/compactor
   shared_store: filesystem
 
+<<<<<<< HEAD
 query_range:
   align_queries_with_step: true
   max_retries: 10
@@ -41,3 +68,15 @@ query_range:
     cache_size: 100000
     cache_ttl: 24h
     results_cache_enabled: true
+=======
+limits_config:
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+
+chunk_store_config:
+  max_look_back_period: 0s
+
+table_manager:
+  retention_deletes_enabled: false
+  retention_period: 0s
+>>>>>>> master

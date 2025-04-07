@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  sqlite:
+    image: sqlite:3.38.5
+    volumes:
+      - sqlite-data:/data
+    environment:
+      - SQLITE_DATABASE=task_manager.db
+    ports:
+      - "8086:8086"
+    command: [
+      "sqlite3",
+      "${SQLITE_DATABASE}",
+      "-line"
+    ]
+
+volumes:
+  sqlite-data:

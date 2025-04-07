@@ -1,0 +1,88 @@
+version: '3'
+
+services:
+  loki:
+    image: grafana/loki:2.9.0
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - /var/log:/var/log
+      - /var/log/app:/var/log/app
+      - /var/log/task_manager:/var/log/task_manager
+    depends_on:
+      - loki
+    networks:
+      - monitoring
+
+  sqlite-exporter:
+    image: prom/sqlite-exporter:latest
+    volumes:
+      - ./sqlite-exporter-config.yaml:/etc/sqlite-exporter/sqlite-exporter.yml
+    ports:
+      - "9321:9321"
+    environment:
+      - SQLITE_DATABASE=task_manager.db
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - sqlite-exporter
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:9.5.15
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-logs-dashboard.json:/etc/grafana/provisioning/dashboards/logs.json
+      - ./grafana-task-manager-metrics.json:/etc/grafana/provisioning/dashboards/task-manager-metrics.json
+      - ./grafana-dashboard.json:/etc/grafana/provisioning/dashboards/task-manager.json
+      - ./grafana-sqlite-dashboard.json:/etc/grafana/provisioning/dashboards/sqlite.json
+      - ./grafana-sqlite-dashboard-queries.json:/etc/grafana/provisioning/dashboards/sqlite-queries.json
+      - ./grafana-prometheus-dashboard.json:/etc/grafana/provisioning/dashboards/prometheus.json
+      - ./grafana-sqlite-datasource.json:/etc/grafana/provisioning/datasources/sqlite.json
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    depends_on:
+      - loki
+      - prometheus
+    networks:
+      - monitoring
+
+  sqlite:
+    image: sqlite:3.38.5
+    volumes:
+      - sqlite-data:/data
+    environment:
+      - SQLITE_DATABASE=task_manager.db
+    ports:
+      - "8086:8086"
+    networks:
+      - monitoring
+
+volumes:
+  loki-data:
+  grafana-data:
+  sqlite-data:
+
+networks:
+  monitoring:
+    driver: bridge

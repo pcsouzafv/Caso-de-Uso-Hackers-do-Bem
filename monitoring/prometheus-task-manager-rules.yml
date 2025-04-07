@@ -1,0 +1,61 @@
+groups:
+  - name: task_manager_rules
+    rules:
+      # Alertas para o banco de dados
+      - alert: HighDatabaseGrowth
+        expr: rate(sqlite_database_size_bytes[1h]) > 10000000  # Alerta se o banco crescer mais de 10MB por hora
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Banco de dados cresceu rapidamente"
+          description: "O banco de dados está crescendo a uma taxa preocupante. Taxa atual: {{ $value | humanize }} bytes/hora"
+
+      - alert: HighTableGrowth
+        expr: rate(sqlite_table_rows[1h]) > 1000  # Alerta se uma tabela crescer mais de 1000 registros por hora
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tabela cresceu rapidamente"
+          description: "A tabela {{ $labels.table }} está crescendo rapidamente. Taxa atual: {{ $value | humanize }} registros/hora"
+
+      # Métricas de performance
+      - record: task_manager:task_creation_rate:rate1h
+        expr: rate(sqlite_table_rows[1h])
+
+      - record: task_manager:task_completion_rate:rate1h
+        expr: rate(sqlite_table_rows[1h])
+
+      # Métricas de uso do banco
+      - record: task_manager:database_usage:ratio
+        expr: (sqlite_database_size_bytes / 1024 / 1024) / 100  # Porcentagem do uso do banco (assumindo 100MB como limite)
+
+      # Métricas de tabelas
+      - record: task_manager:table_size:ratio
+        expr: (sqlite_table_size_bytes / 1024 / 1024) / 100  # Porcentagem do uso por tabela
+
+      # Métricas de fragmentação
+      - record: task_manager:database_fragmentation:ratio
+        expr: sqlite_database_fragmentation
+
+      # Métricas de índices
+      - record: task_manager:index_usage:ratio
+        expr: sqlite_table_indexes / sqlite_table_rows
+
+      # Métricas de performance
+      - record: task_manager:query_latency:avg
+        expr: sqlite_query_latency
+
+      # Métricas de erros
+      - record: task_manager:error_rate:rate1h
+        expr: rate(sqlite_errors[1h])
+
+      - alert: HighErrorRate
+        expr: rate(sqlite_errors[1h]) > 0.1  # Alerta se taxa de erros for maior que 10% por hora
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taxa de erros alta"
+          description: "A taxa de erros no banco de dados está acima do normal. Taxa atual: {{ $value | humanize }} erros/hora"

@@ -1,0 +1,17 @@
+{
+  "apiVersion": 1,
+  "datasources": [
+    {
+      "name": "frser-sqlite-datasource",
+      "type": "grafana-sqlite-datasource",
+      "access": "proxy",
+      "isDefault": false,
+      "database": "/app/task_manager.db",
+      "pathPrefix": "file:",
+      "pathOptions": "mode=ro&_ignore_check_constraints=1",
+      "secureJsonData": {
+        "attachLimit": 0
+      }
+    }
+  ]
+}

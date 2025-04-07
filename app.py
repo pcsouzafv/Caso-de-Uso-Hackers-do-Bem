@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from models import db, User, Task, SystemLog
-from config import Config
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -106,9 +107,10 @@ def add_task():
     description = request.form.get('description')
     due_date_str = request.form.get('due_date')
     
-    if not title:
-        flash('Title is required')
-        return redirect(url_for('index'))
+    try:
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d') if due_date_str else None
+    except ValueError:
+        due_date = None
     
     task = Task(
         title=title,
@@ -116,53 +118,35 @@ def add_task():
         user_id=current_user.id
     )
     
-    if due_date_str:
-        try:
-            task.due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
-        except ValueError:
-            flash('Invalid date')
-            return redirect(url_for('index'))
-    
     db.session.add(task)
-    log = SystemLog(action=f'Task "{title}" created by {current_user.username}', user_id=current_user.id)
+    log = SystemLog(action=f'Tarefa "{title}" criada', user_id=current_user.id)
     db.session.add(log)
     db.session.commit()
     
     return redirect(url_for('index'))
 
-@app.route('/toggle_task/<int:task_id>', methods=['POST'])
-def toggle_task(task_id):
-    task = Task.query.get_or_404(task_id)
-    if task.user_id != current_user.id and not current_user.is_admin:
-        abort(403)
-    
-    task.completed = not task.completed
-    db.session.commit()
-    
-    log = SystemLog(
-        action=f'Task "{task.title}" {"completed" if task.completed else "reopened"} by {current_user.username}',
-        user_id=current_user.id
-    )
-    db.session.add(log)
-    db.session.commit()
-    
-    return jsonify({'success': True})
+@app.route('/task/<int:id>/toggle')
+@login_required
+def toggle_task(id):
+    task = Task.query.get_or_404(id)
+    if task.user_id == current_user.id or current_user.is_admin:
+        task.completed = not task.completed
+        action = 'concluída' if task.completed else 'marcada como pendente'
+        log = SystemLog(action=f'Tarefa "{task.title}" {action}', user_id=current_user.id)
+        db.session.add(log)
+        db.session.commit()
+    return redirect(request.referrer or url_for('user_dashboard'))
 
-@app.route('/delete_task/<int:task_id>', methods=['DELETE'])
-def delete_task(task_id):
-    task = Task.query.get_or_404(task_id)
-    if task.user_id != current_user.id and not current_user.is_admin:
-        abort(403)
-    
-    log = SystemLog(
-        action=f'Task "{task.title}" deleted by {current_user.username}',
-        user_id=current_user.id
-    )
-    db.session.add(log)
-    db.session.delete(task)
-    db.session.commit()
-    
-    return jsonify({'success': True})
+@app.route('/task/<int:id>/delete')
+@login_required
+def delete_task(id):
+    task = Task.query.get_or_404(id)
+    if task.user_id == current_user.id or current_user.is_admin:
+        log = SystemLog(action=f'Tarefa "{task.title}" excluída', user_id=current_user.id)
+        db.session.add(log)
+        db.session.delete(task)
+        db.session.commit()
+    return redirect(request.referrer or url_for('user_dashboard'))
 
 @app.route('/admin/user/add', methods=['POST'])
 @login_required
@@ -197,24 +181,15 @@ def delete_user(user_id):
     if not current_user.is_admin:
         abort(403)
     
-    user = User.query.get_or_404(user_id)
-    if user.id == current_user.id:
-        abort(400)  # Cannot delete yourself
-    
-    log = SystemLog(
-        action=f'User {user.username} deleted by {current_user.username}',
-        user_id=current_user.id
-    )
+    user = User.query.get_or_404(id)
+    log = SystemLog(action=f'Usuário {user.username} excluído', user_id=current_user.id)
     db.session.add(log)
     db.session.delete(user)
+    log = SystemLog(action=f'Usuário {user.username} foi deletado por {current_user.username}', user_id=current_user.id)
+    db.session.add(log)
     db.session.commit()
     
-    return jsonify({'success': True})
-
-@app.route('/health')
-def health_check():
-    """Rota para verificar se o servidor está pronto"""
-    return {'status': 'healthy'}, 200
+    return redirect(url_for('admin_dashboard'))
 
 def create_admin():
     with app.app_context():

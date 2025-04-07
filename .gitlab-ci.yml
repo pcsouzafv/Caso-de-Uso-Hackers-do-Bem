@@ -1,15 +1,22 @@
 stages:
   - test
   - security
+<<<<<<< HEAD
   - review
   - stage
+=======
+  - build
+>>>>>>> master
   - deploy
 
 variables:
   DOCKER_IMAGE: registry.gitlab.com/devops-team/task-manager:$CI_COMMIT_REF_SLUG
+<<<<<<< HEAD
   REVIEW_APP_URL: "http://review-$CI_COMMIT_REF_NAME.gitlab.example.com"
   STAGE_APP_URL: "http://stage.gitlab.example.com"
   ZAP_API_KEY: "$ZAP_API_KEY"
+=======
+>>>>>>> master
 
 # Análise de Segurança
 bandit-scan:
@@ -45,15 +52,21 @@ test:
   script:
     - python -m pytest tests/ --cov=app --cov-report=term-missing
 
+<<<<<<< HEAD
 # Fase de Review
 review:
   stage: review
+=======
+build-docker:
+  stage: build
+>>>>>>> master
   image: docker:latest
   services:
     - docker:dind
   script:
     - docker build -t $DOCKER_IMAGE .
     - docker push $DOCKER_IMAGE
+<<<<<<< HEAD
     - echo "Aplicação disponível em: $REVIEW_APP_URL"
   artifacts:
     paths:
@@ -101,6 +114,11 @@ zap-scan:
     - main
 
 # Deploy para Produção
+=======
+  only:
+    - master
+
+>>>>>>> master
 deploy-prod:
   stage: deploy
   image: alpine
@@ -109,4 +127,8 @@ deploy-prod:
     - echo "Implemente aqui seus comandos de deploy"
   when: manual
   only:
+<<<<<<< HEAD
     - main
+=======
+    - master
+>>>>>>> master
