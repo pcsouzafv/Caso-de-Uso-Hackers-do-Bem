@@ -1,19 +1,19 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from database import Base
 
-db = SQLAlchemy()
+class User(Base):
+    __tablename__ = "users"
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    tasks = db.relationship('Task', backref='user', lazy=True, cascade='all, delete-orphan')
-    logs = db.relationship('SystemLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(80), unique=True, index=True, nullable=False)
+    email = Column(String(120), unique=True, index=True, nullable=False)
+    password_hash = Column(String(128), nullable=False)
+    is_admin = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    tasks = relationship("Task", back_populates="owner")
+    logs = relationship("SystemLog", back_populates="user")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -21,18 +21,24 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    due_date = db.Column(db.DateTime)
-    completed = db.Column(db.Boolean, default=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+class Task(Base):
+    __tablename__ = "tasks"
 
-class SystemLog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    action = db.Column(db.String(50), nullable=False)
-    details = db.Column(db.Text)
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), nullable=False)
+    description = Column(Text)
+    completed = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="tasks")
+
+class SystemLog(Base):
+    __tablename__ = "system_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    action = Column(String(50), nullable=False)
+    details = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", back_populates="logs")
