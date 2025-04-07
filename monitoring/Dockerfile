@@ -1,14 +1,13 @@
 FROM grafana/grafana:10.2.2-ubuntu
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Atualizar pacotes e instalar dependências
+# Atualizar pacotes e instalar dependências como root
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     gnupg \
     software-properties-common \
-    libfontconfig1
+    libfontconfig1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar Loki
 RUN curl -LO https://github.com/grafana/loki/releases/download/v2.9.0/loki-linux-amd64.zip && \
