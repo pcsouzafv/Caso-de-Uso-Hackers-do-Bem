@@ -9,7 +9,7 @@ O pipeline é implementado usando GitHub Actions e consiste em duas etapas princ
 ### 1. Test Job
 
 - **Trigger**: Ativado em pushes e pull requests para as branches `main`, `develop` e `staging`
-- **Ambiente**: Ubuntu Latest com Python 3.9
+- **Ambiente**: Ubuntu Latest com Python 3.11.1
 - **Etapas**:
   - Checkout do código
   - Setup do Python
