@@ -1,11 +1,15 @@
 stages:
   - test
   - security
-  - build
+  - review
+  - stage
   - deploy
 
 variables:
   DOCKER_IMAGE: registry.gitlab.com/devops-team/task-manager:$CI_COMMIT_REF_SLUG
+  REVIEW_APP_URL: "http://review-$CI_COMMIT_REF_NAME.gitlab.example.com"
+  STAGE_APP_URL: "http://stage.gitlab.example.com"
+  ZAP_API_KEY: "$ZAP_API_KEY"
 
 # Análise de Segurança
 bandit-scan:
@@ -41,17 +45,62 @@ test:
   script:
     - python -m pytest tests/ --cov=app --cov-report=term-missing
 
-build-docker:
-  stage: build
+# Fase de Review
+review:
+  stage: review
   image: docker:latest
   services:
     - docker:dind
   script:
     - docker build -t $DOCKER_IMAGE .
     - docker push $DOCKER_IMAGE
+    - echo "Aplicação disponível em: $REVIEW_APP_URL"
+  artifacts:
+    paths:
+      - dependency-check-report.html
+      - 2025-04-06-ZAP-Report-.html
+    reports:
+      security: dependency-check-report.html
   only:
-    - master
+    - merge_requests
 
+# Deploy em Estágio
+stage-deploy:
+  stage: stage
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+    - echo "Aplicação disponível em: $STAGE_APP_URL"
+  environment:
+    name: staging
+    url: $STAGE_APP_URL
+  only:
+    - main
+
+# Testes de Segurança Dinâmicos (DAST)
+zap-scan:
+  stage: stage
+  image: owasp/zap2docker-weekly
+  script:
+    - zap-cli --zap-url http://localhost:8080 spider $STAGE_APP_URL
+    - zap-cli --zap-url http://localhost:8080 active-scan $STAGE_APP_URL
+    - zap-cli --zap-url http://localhost:8080 report -o zap-report.html -f html
+    - zap-cli --zap-url http://localhost:8080 report -o zap-report.json -f json
+  artifacts:
+    paths:
+      - zap-report.html
+      - zap-report.json
+    reports:
+      dast: zap-report.json
+  dependencies:
+    - stage-deploy
+  only:
+    - main
+
+# Deploy para Produção
 deploy-prod:
   stage: deploy
   image: alpine
@@ -60,4 +109,4 @@ deploy-prod:
     - echo "Implemente aqui seus comandos de deploy"
   when: manual
   only:
-    - master
+    - main
