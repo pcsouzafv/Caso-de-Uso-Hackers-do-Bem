@@ -1,7 +1,13 @@
 FROM grafana/grafana:10.2.2-ubuntu
 
-# Instalar Loki e Promtail como root
+# Instalar dependências necessárias
 USER root
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar Loki e Promtail
 RUN curl -LO https://github.com/grafana/loki/releases/download/v2.9.0/loki-linux-amd64.zip && \
     unzip loki-linux-amd64.zip && mv loki-linux-amd64 /usr/local/bin/loki && chmod +x /usr/local/bin/loki && \
     curl -LO https://github.com/grafana/loki/releases/download/v2.9.0/promtail-linux-amd64.zip && \
