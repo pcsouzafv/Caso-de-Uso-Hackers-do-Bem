@@ -1,14 +1,10 @@
-FROM ubuntu:22.04
+FROM grafana/grafana:10.2.2-ubuntu
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y curl unzip gnupg software-properties-common adduser libfontconfig1 && \
     useradd -ms /bin/bash grafana
-
-# Install Grafana
-RUN curl -s https://dl.grafana.com/oss/release/grafana_10.2.2_amd64.deb -o grafana.deb && \
-    dpkg -i grafana.deb && rm grafana.deb
 
 # Install Loki
 RUN curl -LO https://github.com/grafana/loki/releases/download/v2.9.0/loki-linux-amd64.zip && \
