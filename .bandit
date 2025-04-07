@@ -1,0 +1,21 @@
+[bandit]
+skip = tests/,__pycache__/,venv/,mypy_cache/
+exclude = tests/,__pycache__/,venv/,mypy_cache/
+confidence = medium
+severity = medium
+
+[bandit.blacklist]
+plugins =
+    assert_used
+    blacklisted_imports
+    blacklist
+    exec_used
+    hard_coded_password
+    hardcoded_bind_all_interfaces
+    hardcoded_password_default
+    hardcoded_password_func_arg
+    hardcoded_password_string
+    httpoxy
+    import_telnet
+    jinja2_autoescape_false
+    nested_except

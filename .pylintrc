@@ -1,0 +1,24 @@
+[MASTER]
+
+# Add any paths that should be added to the Python path
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+# Disable the message, report, category or checker with the given id(s).
+disable=E1101,W0211  # no-member - SQLAlchemy session methods are dynamically added, no-docstring-args
+
+[TYPECHECK]
+# Add additional directories to search for Python modules.
+init-hook='import sys; sys.path.append(".")'
+# List of methods for which parameter documentation is not required.
+ignore-args=__init__
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=120
+
+[REPORTS]
+# Disable all reports.
+reports=no
+
+[REFACTORING]
