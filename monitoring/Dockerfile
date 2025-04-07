@@ -23,7 +23,7 @@ COPY start.sh /usr/local/bin/
 
 # Garantir permissões corretas
 RUN chmod +x /usr/local/bin/start.sh && \
-    chown -R grafana:grafana /etc/loki /etc/promtail /usr/local/bin/start.sh /var/log/task_manager
+    chown -R 472:472 /etc/loki /etc/promtail /usr/local/bin/start.sh /var/log/task_manager
 
 # Usar usuário grafana
 USER grafana
