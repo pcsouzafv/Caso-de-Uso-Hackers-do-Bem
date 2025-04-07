@@ -5,82 +5,102 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
-from geckodriver_autoinstaller import install as gecko_install
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from tests.config import SeleniumConfig
 
 def pytest_setup_options():
-    firefox_options = Options()
-    firefox_options.add_argument('--headless')
-    return firefox_options
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
+    return chrome_options
 
 @pytest.fixture(scope="function")
 def browser():
-    """Fixture que configura o navegador para os testes funcionais"""
+    """Configuração do navegador para testes"""
     options = pytest_setup_options()
-    service = Service(gecko_install())
-    driver = webdriver.Firefox(service=service, options=options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=options
+    )
+    driver.implicitly_wait(10)
     yield driver
     driver.quit()
 
-@pytest.mark.functional
-def test_user_login(browser, live_server, test_user):
-    """Test user login through the interface"""
-    browser.get(f"{live_server}/login")
+def test_theme_toggle(browser, live_server):
+    """Teste do toggle de tema claro/escuro"""
+    browser.get(live_server)
     
-    # Fill in the login form
-    username = browser.find_element(By.NAME, "username")
-    password = browser.find_element(By.NAME, "password")
-    submit = browser.find_element(By.CSS_SELECTOR, "input[type='submit']")
+    # Verificar tema inicial
+    assert 'light' in browser.page_source
     
-    username.send_keys("testuser")
-    password.send_keys("testpass")
-    submit.click()
+    # Clicar no botão de toggle
+    theme_toggle = browser.find_element(By.CLASS_NAME, 'theme-toggle')
+    theme_toggle.click()
     
-    # Check if the user was redirected to the home page
-    WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.ID, "task-list"))
-    )
+    # Verificar se o tema mudou
+    assert 'dark' in browser.page_source
     
-    assert browser.current_url == f"{live_server}/"
-    assert "Tasks" in browser.page_source
+    # Alternar de volta
+    theme_toggle.click()
+    assert 'light' in browser.page_source
 
-@pytest.mark.functional
-def test_create_task(browser, live_server, test_user):
-    """Test task creation through the interface"""
-    browser.get(f"{live_server}/login")
+def test_task_creation_ui(browser, live_server):
+    """Teste da criação de tarefa pela UI"""
+    browser.get(live_server)
     
-    # Login first
-    username = browser.find_element(By.NAME, "username")
-    password = browser.find_element(By.NAME, "password")
-    submit = browser.find_element(By.CSS_SELECTOR, "input[type='submit']")
+    # Fazer login
+    username_field = browser.find_element(By.ID, 'username')
+    password_field = browser.find_element(By.ID, 'password')
+    login_button = browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
     
-    username.send_keys("testuser")
-    password.send_keys("testpass")
-    submit.click()
+    username_field.send_keys('testuser')
+    password_field.send_keys('testpass')
+    login_button.click()
     
-    # Wait for login to complete
+    # Aguardar redirecionamento
     WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.ID, "task-list"))
+        EC.presence_of_element_located((By.CLASS_NAME, 'task-form'))
     )
     
-    # Click the button to create a new task
-    new_task_btn = browser.find_element(By.ID, "new-task-btn")
-    new_task_btn.click()
+    # Preencher formulário de tarefa
+    title_field = browser.find_element(By.ID, 'title')
+    description_field = browser.find_element(By.ID, 'description')
+    submit_button = browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
     
-    # Fill in the new task form
-    title = browser.find_element(By.NAME, "title")
-    description = browser.find_element(By.NAME, "description")
-    submit = browser.find_element(By.CSS_SELECTOR, "input[type='submit']")
+    title_field.send_keys('Test Task')
+    description_field.send_keys('This is a test task')
+    submit_button.click()
     
-    title.send_keys("Test Task")
-    description.send_keys("This is a test task")
-    submit.click()
-    
-    # Check if the task was created successfully
+    # Verificar se a tarefa foi criada
     WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "task-item"))
+        EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'Test Task')]"))
+    )
+
+def test_admin_dashboard_access(browser, live_server):
+    """Teste de acesso ao painel do administrador"""
+    browser.get(live_server)
+    
+    # Fazer login com usuário admin
+    username_field = browser.find_element(By.ID, 'username')
+    password_field = browser.find_element(By.ID, 'password')
+    login_button = browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+    
+    username_field.send_keys('admin')
+    password_field.send_keys('adminpass')
+    login_button.click()
+    
+    # Aguardar redirecionamento
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'admin-dashboard'))
     )
     
-    assert "Test Task" in browser.page_source
-    assert "This is a test task" in browser.page_source
+    # Verificar elementos do painel
+    assert 'Painel do Administrador' in browser.page_source
+    assert 'Gerenciar Usuários' in browser.page_source
+    assert 'Gerenciar Tarefas' in browser.page_source
+    assert 'Logs do Sistema' in browser.page_source

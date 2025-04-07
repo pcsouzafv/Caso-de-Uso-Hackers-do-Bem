@@ -1,15 +1,16 @@
+/* Variáveis de cores - Tema Light (padrão) */
 :root {
-    /* Cores do tema claro */
+    --primary-color: #4a6da7;
     --bg-primary: #ffffff;
     --bg-secondary: #f8f9fa;
     --bg-accent: #e9ecef;
     --text-primary: #212529;
     --text-secondary: #6c757d;
     --border-color: #dee2e6;
-    --primary-color: #4a6da7;
+    --shadow-color: rgba(0, 0, 0, 0.1);
     --danger-color: #dc3545;
     --success-color: #28a745;
-    --shadow-color: rgba(0, 0, 0, 0.1);
+    --warning-color: #ffc107;
     --input-bg: #ffffff;
     --card-bg: #ffffff;
     --header-bg: #f8f9fa;
@@ -17,17 +18,18 @@
     --tab-active-text: #ffffff;
 }
 
+/* Variáveis de cores - Tema Dark */
 [data-theme="dark"] {
-    /* Cores do tema escuro */
+    --primary-color: #6d8fc9;
     --bg-primary: #1a1a1a;
     --bg-secondary: #2d2d2d;
     --bg-accent: #3d3d3d;
     --text-primary: #e9ecef;
     --text-secondary: #adb5bd;
     --border-color: #404040;
-    --primary-color: #6d8fc9;
     --danger-color: #e74c3c;
     --success-color: #2ecc71;
+    --warning-color: #f1c40f;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --input-bg: #2d2d2d;
     --card-bg: #2d2d2d;
@@ -36,6 +38,20 @@
     --tab-active-text: #ffffff;
 }
 
+/* Tema Dark */
+[data-theme="dark"] {
+    --primary-color: #4a90e2;
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --danger-color: #ff4444;
+    --success-color: #00C851;
+    --warning-color: #ffbb33;
+}
+
+/* Reset e estilos base */
 * {
     margin: 0;
     padding: 0;
@@ -49,14 +65,191 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
+    flex: 1;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
 }
 
+/* Homenagem Hackers do Bem */
+.hackers-bem-tribute {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, #1e4976 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tribute-title {
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tribute-text {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.tribute-thanks {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.4;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+/* Ajustes no layout do login */
+.login-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.login-box {
+    background: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.login-box h1 {
+    text-align: center;
+    margin: 1rem 0 2rem;
+    color: var(--text-primary);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #357abd;
+    transform: translateY(-1px);
+}
+
+/* Rodapé */
+footer {
+    background: var(--bg-secondary);
+    padding: 2rem 0;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+.footer-container p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.footer-container a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-container a:hover {
+    color: #357abd;
+    text-decoration: underline;
+}
+
+.footer-container strong {
+    color: var(--text-primary);
+}
+
+/* Alertas */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.alert-danger {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+}
+
+/* Botão de alternar tema */
+.theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--text-secondary);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.theme-toggle i {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+/* Resto do CSS mantido igual... */
 /* Header */
 .header {
     background-color: var(--header-bg);
@@ -67,6 +260,9 @@ body {
 }
 
 .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -766,4 +962,61 @@ footer {
 
 .footer-container strong {
     color: var(--text-primary);
+}
+
+/* Homenagem Hackers do Bem */
+.hackers-bem-tribute {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-color) 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.tribute-title {
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tribute-text {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.tribute-thanks {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.4;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+/* Ajustes no layout do login */
+.login-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.login-box {
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.login-box h1 {
+    text-align: center;
+    margin: 1rem 0 2rem;
+    color: var(--text-primary);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
 }
