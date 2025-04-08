@@ -1,0 +1,28 @@
+[tool.pylint]
+init-hook='import sys; sys.path.append(".")'
+
+[tool.pylint.messages_control]
+disable = [
+    "E1101",  # no-member - SQLAlchemy session methods are dynamically added
+    "W0211",  # no-docstring-args
+]
+
+[tool.pylint.typecheck]
+init-hook='import sys; sys.path.append(".")'
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.reports]
+reports = false
+
+[tool.pylint.design]
+max-args = 6
+
+[tool.pylint.basic]
+max-public-methods = 20
+
+[tool.pylint.imports]
+# Configurações para importações
+standard_imports = ["datetime"]
+third_party_imports = ["flask", "flask_sqlalchemy", "flask_login", "werkzeug"]

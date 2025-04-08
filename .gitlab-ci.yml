@@ -1,81 +1,45 @@
 stages:
-  - test
   - security
-<<<<<<< HEAD
-  - review
   - stage
-=======
-  - build
->>>>>>> master
   - deploy
 
 variables:
   DOCKER_IMAGE: registry.gitlab.com/devops-team/task-manager:$CI_COMMIT_REF_SLUG
-<<<<<<< HEAD
-  REVIEW_APP_URL: "http://review-$CI_COMMIT_REF_NAME.gitlab.example.com"
   STAGE_APP_URL: "http://stage.gitlab.example.com"
   ZAP_API_KEY: "$ZAP_API_KEY"
-=======
->>>>>>> master
 
 # Análise de Segurança
-bandit-scan:
+security-checks:
   stage: security
-  image: python:3.13
+  image: python:3.9
   script:
     - pip install bandit
-    - bandit -r app.py models.py config.py tests/ -f json > bandit_report.json
-    - cat bandit_report.json
+    - bandit -r . -f json -o bandit-report.json
+    - pip install dependency-check
+    - dependency-check --project "Task Manager" --scan . --format JSON --output dependency-check-report.json
   artifacts:
     paths:
-      - bandit_report.json
-    reports:
-      sast: bandit_report.json
-
-dependency-check:
-  stage: security
-  image: owasp/dependency-check
-  script:
-    - dependency-check --project "Task Manager" --scan . --format "JSON" --out dependency-check-report.json
-    - cat dependency-check-report.json
-  artifacts:
-    paths:
+      - bandit-report.json
       - dependency-check-report.json
-    reports:
-      dependency_scanning: dependency-check-report.json
+    expire_in: 1 week
 
-test:
-  stage: test
-  image: python:3.13
-  before_script:
-    - pip install -r requirements.txt
+# Testes de Segurança Dinâmicos (DAST)
+zap-scan:
+  stage: security
+  image: owasp/zap2docker-weekly
   script:
-    - python -m pytest tests/ --cov=app --cov-report=term-missing
-
-<<<<<<< HEAD
-# Fase de Review
-review:
-  stage: review
-=======
-build-docker:
-  stage: build
->>>>>>> master
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker build -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
-<<<<<<< HEAD
-    - echo "Aplicação disponível em: $REVIEW_APP_URL"
+    - zap-baseline.py -t $STAGE_APP_URL -r zap-report.json
+    - cat zap-report.json
   artifacts:
     paths:
-      - dependency-check-report.html
-      - 2025-04-06-ZAP-Report-.html
-    reports:
-      security: dependency-check-report.html
-  only:
-    - merge_requests
+      - zap-report.json
+    expire_in: 1 week
+  dependencies:
+    - stage-deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+      when: on_success
+      allow_failure: false
 
 # Deploy em Estágio
 stage-deploy:
@@ -90,45 +54,25 @@ stage-deploy:
   environment:
     name: staging
     url: $STAGE_APP_URL
-  only:
-    - main
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+      when: on_success
+      allow_failure: false
 
-# Testes de Segurança Dinâmicos (DAST)
-zap-scan:
-  stage: stage
-  image: owasp/zap2docker-weekly
-  script:
-    - zap-cli --zap-url http://localhost:8080 spider $STAGE_APP_URL
-    - zap-cli --zap-url http://localhost:8080 active-scan $STAGE_APP_URL
-    - zap-cli --zap-url http://localhost:8080 report -o zap-report.html -f html
-    - zap-cli --zap-url http://localhost:8080 report -o zap-report.json -f json
-  artifacts:
-    paths:
-      - zap-report.html
-      - zap-report.json
-    reports:
-      dast: zap-report.json
-  dependencies:
-    - stage-deploy
-  only:
-    - main
-
-# Deploy para Produção
-=======
-  only:
-    - master
-
->>>>>>> master
-deploy-prod:
+# Deploy em Produção
+prod-deploy:
   stage: deploy
-  image: alpine
+  image: docker:latest
+  services:
+    - docker:dind
   script:
-    - echo "Deploy para produção"
-    - echo "Implemente aqui seus comandos de deploy"
-  when: manual
-  only:
-<<<<<<< HEAD
-    - main
-=======
-    - master
->>>>>>> master
+    - docker build -t $DOCKER_IMAGE:prod .
+    - docker push $DOCKER_IMAGE:prod
+    - echo "Aplicação disponível em produção"
+  environment:
+    name: production
+    url: "http://prod.gitlab.example.com"
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+      when: on_success
+      allow_failure: false
