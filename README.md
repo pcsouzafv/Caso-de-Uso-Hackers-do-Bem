@@ -6,6 +6,10 @@
 
 ## Sobre o Projeto
 
+
+https://github.com/user-attachments/assets/440ea7cd-7fcf-46b6-af10-1ba3e4e10153
+
+
 Este é um sistema de gerenciamento de tarefas desenvolvido durante o curso Hackers do Bem, com foco em segurança e boas práticas de desenvolvimento. O sistema oferece uma interface moderna e responsiva, com suporte a temas claro/escuro e recursos avançados de monitoramento.
 
 ## Funcionalidades Principais
