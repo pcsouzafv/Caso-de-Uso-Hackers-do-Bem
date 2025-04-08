@@ -19,10 +19,11 @@ jobs:
         bandit -r . -f json -o bandit-report.json
     
     - name: Upload Bandit Report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.1.1
       with:
         name: bandit-report
         path: bandit-report.json
+        retention-days: 7
 
   dependency-check:
     runs-on: ubuntu-latest
@@ -36,10 +37,11 @@ jobs:
         dependency-check --project "Task Manager" --scan . --format JSON --output dependency-check-report.json
     
     - name: Upload Dependency Check Report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.1.1
       with:
         name: dependency-check-report
         path: dependency-check-report.json
+        retention-days: 7
 
   notify:
     needs: [bandit, dependency-check]
