@@ -10,3 +10,5 @@ flake8>=6.1.0
 bandit>=1.7.0
 coverage>=7.3.2
 python-dotenv>=1.0.0
+selenium>=4.0.0
+webdriver-manager>=4.0.0
