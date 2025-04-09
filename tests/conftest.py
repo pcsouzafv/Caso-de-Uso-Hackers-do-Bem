@@ -19,6 +19,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Adicionar o diretório pai ao PYTHONPATH
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 @pytest.fixture(scope="session")
 def test_app():
     """Fixture que configura o app de teste"""
