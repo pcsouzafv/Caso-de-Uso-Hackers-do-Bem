@@ -139,6 +139,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## Documentação Adicional
 
-- [Guia de Configuração do Monitoramento](docs/monitoring.md)
-- [Guia de Segurança](docs/security.md)
-- [Guia de Contribuição](docs/contributing.md)
+- [Documentação Geral](docs/DOCUMENTACAO.md)
+- [Guia de Segurança](docs/GUIA_SEGURANCA.md)
+- [Guia de Contribuição](docs/GUIA_CONTRIBUICAO.md)
+- [Guia de Monitoramento](docs/GUIA_MONITORAMENTO.md)
