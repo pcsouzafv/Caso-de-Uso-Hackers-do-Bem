@@ -4,9 +4,18 @@ stages:
   - deploy
 
 variables:
+  CI: true
+  CI_SERVER: "gitlab"
   DOCKER_IMAGE: registry.gitlab.com/devops-team/task-manager:$CI_COMMIT_REF_SLUG
-  STAGE_APP_URL: "http://stage.gitlab.example.com"
+  STAGE_APP_URL: "https://stage.gitlab.example.com"
+  PROD_APP_URL: "https://prod.gitlab.example.com"
   ZAP_API_KEY: "$ZAP_API_KEY"
+
+workflow:
+  rules:
+    - if: $CI_SERVER == "gitlab"
+      when: always
+    - when: never
 
 # Análise de Segurança
 security-checks:
@@ -28,47 +37,39 @@ zap-scan:
   stage: security
   image: owasp/zap2docker-weekly
   script:
-    - zap-baseline.py -t $STAGE_APP_URL -r zap-report.json
-    - cat zap-report.json
+    - zap-baseline.py -t ${STAGE_APP_URL} -r zap-report.json
   artifacts:
     paths:
       - zap-report.json
     expire_in: 1 week
-  dependencies:
-    - stage-deploy
-  rules:
-    - if: $CI_COMMIT_BRANCH == 'main'
-      when: on_success
-      allow_failure: false
 
-# Deploy em Estágio
-stage-deploy:
+# Deploy para Staging
+deploy-stage:
   stage: stage
   image: docker:latest
   services:
     - docker:dind
   script:
-    - docker build -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
-    - echo "Aplicação disponível em: $STAGE_APP_URL"
-  environment: staging
-  rules:
-    - if: $CI_COMMIT_BRANCH == 'main'
-      when: on_success
-      allow_failure: false
+    - docker build -t ${DOCKER_IMAGE} .
+    - docker push ${DOCKER_IMAGE}
+  only:
+    - main
+  environment:
+    name: staging
+    url: "https://stage.gitlab.example.com"
 
-# Deploy em Produção
-prod-deploy:
+# Deploy para Produção
+deploy-prod:
   stage: deploy
   image: docker:latest
   services:
     - docker:dind
   script:
-    - docker build -t $DOCKER_IMAGE:prod .
-    - docker push $DOCKER_IMAGE:prod
-    - echo "Aplicação disponível em produção"
-  environment: production
-  rules:
-    - if: $CI_COMMIT_BRANCH == 'main'
-      when: on_success
-      allow_failure: false
+    - docker build -t ${DOCKER_IMAGE} .
+    - docker push ${DOCKER_IMAGE}
+  only:
+    - main
+  when: manual
+  environment:
+    name: production
+    url: "https://prod.gitlab.example.com"

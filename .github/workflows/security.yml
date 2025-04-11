@@ -6,12 +6,32 @@ on:
   schedule:
     - cron: '0 0 * * *' # Diariamente à meia-noite
 
+env:
+  CI: true
+  CI_SERVER: "github"
+
 jobs:
   bandit:
     runs-on: ubuntu-latest
+    if: github.repository == 'your-username/your-repo-name'
     
     steps:
+    - name: Debug Info
+      run: |
+        echo "Running Security Checks"
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "Workflow: ${{ github.workflow }}"
+
     - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
     
     - name: Run Bandit
       run: |
@@ -19,7 +39,7 @@ jobs:
         bandit -r . -f json -o bandit-report.json
     
     - name: Upload Bandit Report
-      uses: actions/upload-artifact@v4.1.1
+      uses: actions/upload-artifact@v3
       with:
         name: bandit-report
         path: bandit-report.json
@@ -27,17 +47,33 @@ jobs:
 
   dependency-check:
     runs-on: ubuntu-latest
+    if: github.repository == 'your-username/your-repo-name'
     
     steps:
+    - name: Debug Info
+      run: |
+        echo "Running Dependency Check"
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "Workflow: ${{ github.workflow }}"
+
     - uses: actions/checkout@v4
     
-    - name: Dependency Check
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+    
+    - name: Run Dependency Check
       run: |
         pip install dependency-check
         dependency-check --project "Task Manager" --scan . --format JSON --output dependency-check-report.json
     
     - name: Upload Dependency Check Report
-      uses: actions/upload-artifact@v4.1.1
+      uses: actions/upload-artifact@v3
       with:
         name: dependency-check-report
         path: dependency-check-report.json
@@ -46,9 +82,13 @@ jobs:
   notify:
     needs: [bandit, dependency-check]
     runs-on: ubuntu-latest
+    if: github.repository == 'your-username/your-repo-name'
     
     steps:
     - name: Security Summary
       if: always()
       run: |
         echo "Security checks completed. Check artifacts for reports."
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
