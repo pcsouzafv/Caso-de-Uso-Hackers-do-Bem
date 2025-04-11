@@ -4,11 +4,14 @@
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
+<p align="center">
+  <video width="800" controls>
+    <source src="https://github.com/user-attachments/assets/440ea7cd-7fcf-46b6-af10-1ba3e4e10153" type="video/mp4">
+    Seu navegador não suporta vídeos HTML5.
+  </video>
+</p>
+
 ## Sobre o Projeto
-
-
-https://github.com/user-attachments/assets/440ea7cd-7fcf-46b6-af10-1ba3e4e10153
-
 
 Este é um sistema de gerenciamento de tarefas desenvolvido durante o curso Hackers do Bem, com foco em segurança e boas práticas de desenvolvimento. O sistema oferece uma interface moderna e responsiva, com suporte a temas claro/escuro e recursos avançados de monitoramento.
 
