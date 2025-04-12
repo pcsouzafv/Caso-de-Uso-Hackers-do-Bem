@@ -143,13 +143,22 @@ def selenium_driver():
     options.add_argument('--window-size=1920,1080')
     
     try:
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=options
-        )
-        driver.implicitly_wait(10)
-        yield driver
-        driver.quit()
+        # Usar uma abordagem mais robusta para inicializar o driver
+        from webdriver_manager.chrome import ChromeDriverManager
+        from selenium.webdriver.chrome.service import Service
+        
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+        
+        # Adicionar tempo de espera implícito para evitar falhas de sincronização
+        driver.implicitly_wait(10)  # 10 segundos de espera
+        
+        # Usar try/finally para garantir fechamento apropriado
+        try:
+            yield driver
+        finally:
+            # Sempre fechar o driver, mesmo em caso de erro
+            driver.quit()
     except (webdriver.WebDriverException, ImportError, OSError) as e:
         logger.error("Erro ao inicializar o Selenium: %s", e)
         pytest.skip("Selenium não está disponível neste ambiente")
