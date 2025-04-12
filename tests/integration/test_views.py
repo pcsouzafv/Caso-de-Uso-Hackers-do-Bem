@@ -1,13 +1,38 @@
 # tests/integration/test_views.py
 import pytest
-from task_manager.models import User, Task
+import os
+import sys
+
+# Adicionar o diretório raiz do projeto ao sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+# Importar diretamente do arquivo app.py e db.py
+from db import db
+import importlib.util
+spec = importlib.util.spec_from_file_location("app_module", os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')), "app.py"))
+app_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(app_module)
+
+# Extrair as classes e a aplicação do módulo importado
+app = app_module.app
+MainUser = app_module.MainUser
+MainTask = app_module.MainTask
+MainSystemLog = app_module.MainSystemLog
+
+@pytest.fixture
+def test_client():
+    with app.test_client() as client:
+        with app.app_context():
+            db.create_all()
+            yield client
+            db.session.remove()
 
 def test_task_workflow(test_client):
     """Teste do fluxo completo de tarefas"""
     # Criar usuário
-    user = User(username="workflow_user")
+    user = MainUser(username="workflow_user", email="workflow@example.com")
     user.set_password("password123")
-    with test_client.application.app_context():
+    with app.app_context():
         db.session.add(user)
         db.session.commit()
 
@@ -31,8 +56,8 @@ def test_task_workflow(test_client):
     assert response.status_code == 200
 
     # Verificar se a tarefa foi criada
-    with test_client.application.app_context():
-        task = Task.query.filter_by(title="Integration Test Task").first()
+    with app.app_context():
+        task = MainTask.query.filter_by(title="Integration Test Task").first()
         assert task is not None
         task_id = task.id
 
@@ -41,8 +66,8 @@ def test_task_workflow(test_client):
     assert response.status_code == 200
 
     # Verificar se foi marcada
-    with test_client.application.app_context():
-        task = Task.query.get(task_id)
+    with app.app_context():
+        task = MainTask.query.get(task_id)
         assert task.completed == True
 
     # Excluir tarefa
@@ -50,6 +75,6 @@ def test_task_workflow(test_client):
     assert response.status_code == 200
 
     # Verificar se a tarefa foi excluída
-    with test_client.application.app_context():
-        task = Task.query.get(task_id)
+    with app.app_context():
+        task = MainTask.query.get(task_id)
         assert task is None

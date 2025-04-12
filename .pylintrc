@@ -1,7 +1,10 @@
 [MASTER]
 
 # Add any additional directories to the Python path
-init-hook='import sys; sys.path.append(".")'
+init-hook='import sys; import os; sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.abspath("__file__"))))'
+
+# Especificar arquivos que o pylint deve ignorar
+ignore-patterns=.*\.git
 
 [MESSAGES CONTROL]
 
@@ -9,20 +12,33 @@ init-hook='import sys; sys.path.append(".")'
 # either give multiple identifiers separated by comma (,) or put this option
 # multiple times (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=W0611,C0114,C0116
+disable=W0611,C0114,C0116,E0401,W0621,C0411,C0413,C0301,C0303
 
 [FORMAT]
 
 # Specify a line length for long lines warnings.
-max-line-length=100
+max-line-length=150
 
 [BASIC]
 
 # List of builtins function names that should not be used, separated by a comma.
 bad-names=foo,bar,baz,toto,tutu,tata
 
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,db,app
+
 [REPORTS]
 
 # Set the output format. Available formats are text, parseable, colorized, msvs
 # (Visual Studio) and html.
 output-format=colorized
+
+[SIMILARITIES]
+
+# Ignore imports when computing similarities.
+ignore-imports=yes
+
+[TYPECHECK]
+
+# List of members which are set dynamically and missed by pylint inference
+generated-members=db.session.*,db.Column,db.Model.*,db.relationship,db.String,db.Integer,db.Boolean,db.Text,db.DateTime,db.ForeignKey
