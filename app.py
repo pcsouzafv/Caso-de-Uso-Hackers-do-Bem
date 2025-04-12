@@ -13,16 +13,28 @@ from werkzeug.security import check_password_hash, generate_password_hash
 db = SQLAlchemy()
 login_manager = LoginManager()
 
-# Criação do app
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY', 'dev-key-please-change-in-production')
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskmanager.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Função factory para compatibilidade com os testes
+def create_app(config=None):
+    """Factory que cria e configura a aplicação Flask"""
+    app_instance = Flask(__name__)
+    app_instance.config["SECRET_KEY"] = os.environ.get('SECRET_KEY', 'dev-key-please-change-in-production')
+    app_instance.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskmanager.db"
+    app_instance.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
+    # Se estiver em modo de teste, sobreescrevemos a configuração
+    if config == 'testing':
+        app_instance.config["TESTING"] = True
+        app_instance.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+        app_instance.config["WTF_CSRF_ENABLED"] = False
+    
+    db.init_app(app_instance)
+    login_manager.init_app(app_instance)
+    login_manager.login_view = "login"
+    
+    return app_instance
 
-# Inicialização das extensões com o app
-db.init_app(app)
-login_manager.init_app(app)
-login_manager.login_view = "login"
+# Criação do app
+app = create_app()
 
 # Definição dos modelos
 class User(db.Model, UserMixin):
