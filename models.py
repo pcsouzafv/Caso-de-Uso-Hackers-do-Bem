@@ -11,7 +11,7 @@ from models_manager import setup_test_db, cleanup_test_db
 # Note: as classes originais (OldUser, OldTask, OldSystemLog) são mantidas abaixo
 # apenas para compatibilidade com código legado que possa depender delas
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
