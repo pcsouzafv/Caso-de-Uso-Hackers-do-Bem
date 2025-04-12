@@ -10,7 +10,7 @@
     Seu navegador não suporta vídeos HTML5.
   </video>
 </p>
-
+https://github.com/user-attachments/assets/f0f52fc1-9f97-4356-963a-43f63ffa9a53
 ## Sobre o Projeto
 
 Este é um sistema de gerenciamento de tarefas desenvolvido durante o curso Hackers do Bem, com foco em segurança e boas práticas de desenvolvimento. O sistema oferece uma interface moderna e responsiva, com suporte a temas claro/escuro e recursos avançados de monitoramento.
