@@ -1,7 +1,7 @@
 """Gerenciador centralizado para modelos SQLAlchemy.
 
-Este mu00f3dulo fornece uma u00fanica instu00e2ncia compartilhada dos modelos
-para evitar problemas de conflito quando importados em mu00faltiplos arquivos.
+Este módulo fornece uma única instância compartilhada dos modelos
+para evitar problemas de conflito quando importados em múltiplos arquivos.
 """
 
 import os
@@ -13,10 +13,10 @@ from datetime import datetime
 # Garantir que o diretório raiz esteja no sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Importar a instu00e2ncia do SQLAlchemy
+# Importar a instância do SQLAlchemy
 from db import db
 
-# Definiu00e7u00e3o dos modelos
+# Definição dos modelos
 class MainUser(db.Model, UserMixin):
     __tablename__ = "main_users"
     __table_args__ = {'extend_existing': True}
@@ -56,6 +56,13 @@ class MainSystemLog(db.Model):
     details = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('main_users.id'), nullable=False)
+    
+    def __init__(self, **kwargs):
+        # Garantir que user_id seja fornecido
+        if 'user_id' not in kwargs or kwargs['user_id'] is None:
+            raise ValueError("user_id é obrigatório para criar um SystemLog")
+        super().__init__(**kwargs)
+
 
 # Funções auxiliares para testes
 def setup_test_db():
@@ -85,6 +92,9 @@ def create_test_task(user_id, title="Test Task", description="Test description")
 
 def create_test_log(user_id, action="Test action", details="Test details"):
     """Cria um log de sistema de teste e retorna a instância"""
+    if user_id is None:
+        raise ValueError("user_id não pode ser None ao criar um log do sistema")
+        
     log = MainSystemLog(
         action=action,
         details=details,
