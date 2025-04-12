@@ -28,20 +28,38 @@ def client():
 
 @pytest.fixture
 def test_user():
+    """Cria um usuário de teste na sessão do banco de dados.
+    Importante: este fixture deve ser usado APENAS dentro de um contexto app.app_context().
+    """
+    # Criar o usuário - importante que isso seja feito FORA de app_context
+    # para garantir que o usuário seja criado, mas não vincule a sessão atual
+    user = MainUser(username="testuser", email="testuser@example.com")
+    user.set_password("testpass")
+    
+    # Dentro de app_context, salvamos o usuário e o recuperamos para garantir
+    # que ele seja persistido na sessão atual
     with app.app_context():
-        # Verificar se o usuário já existe
-        user = MainUser.query.filter_by(username="testuser").first()
-        if not user:
-            user = MainUser(username="testuser", email="testuser@example.com")
-            user.set_password("testpass")
-            db.session.add(user)
+        # Limpar qualquer usuário existente com o mesmo nome
+        existing = MainUser.query.filter_by(username="testuser").first()
+        if existing:
+            db.session.delete(existing)
             db.session.commit()
-            # Recarregar o usuário da sessão após o commit
-            user = MainUser.query.filter_by(username="testuser").first()
         
-        # Garantir que o teste retorne uma instância vinculada à sessão atual
-        db.session.refresh(user)
-        return user
+        # Adicionar e persistir o novo usuário
+        db.session.add(user)
+        db.session.commit()
+        
+        # Importante: recuperar o usuário do banco para garantir que ele esteja
+        # vinculado à sessão atual
+        fresh_user = MainUser.query.filter_by(username="testuser").first()
+        
+        yield fresh_user  # Retorna o usuário recuperado da sessão atual
+        
+        # Limpar após o teste
+        user_to_delete = MainUser.query.filter_by(username="testuser").first()
+        if user_to_delete:
+            db.session.delete(user_to_delete)
+            db.session.commit()
 
 @pytest.mark.integration
 def test_login_route(client):
@@ -53,75 +71,65 @@ def test_login_route(client):
 @pytest.mark.integration
 def test_login_user(client, test_user):
     """Test user login"""
-    # Garantir que o usuário esteja na sessão atual
-    with app.app_context():
-        db.session.refresh(test_user)
-        
-        response = client.post('/login', data={
-            'username': test_user.username,
-            'password': 'testpass'
-        }, follow_redirects=True)
-        
-        assert response.status_code == 200
-        assert b'Tarefas' in response.data or b'Task' in response.data
+    # Não é necessário usar o app_context aqui, pois o fixture test_user já garante
+    # que o usuário está corretamente persistido
+    response = client.post('/login', data={
+        'username': test_user.username,
+        'password': 'testpass'
+    }, follow_redirects=True)
+    
+    assert response.status_code == 200
+    assert b'Tarefas' in response.data or b'Task' in response.data
 
 @pytest.mark.integration
 def test_logout_route(client, test_user):
     """Test user logout"""
-    # Garantir que o usuário esteja na sessão atual
-    with app.app_context():
-        db.session.refresh(test_user)
-        
-        # Primeiro login
-        client.post('/login', data={
-            'username': test_user.username,
-            'password': 'testpass'
-        }, follow_redirects=True)
-        
-        # Agora logout
-        response = client.get('/logout', follow_redirects=True)
-        assert response.status_code == 200
-        assert b'Login' in response.data
+    # Fazer login primeiro
+    client.post('/login', data={
+        'username': test_user.username,
+        'password': 'testpass'
+    }, follow_redirects=True)
+    
+    # Agora fazer logout
+    response = client.get('/logout', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Login' in response.data
 
 @pytest.mark.integration
 def test_add_task(client, test_user):
     """Test task addition"""
-    # Garantir que o usuário esteja na sessão atual
-    with app.app_context():
-        db.session.refresh(test_user)
-        
-        # Primeiro login
-        client.post('/login', data={
-            'username': test_user.username,
-            'password': 'testpass'
-        }, follow_redirects=True)
-        
-        # Adicionar tarefa
-        response = client.post('/add_task', data={
-            'title': 'New Task',
-            'description': 'Task description'
-        }, follow_redirects=True)
-        
-        assert response.status_code == 200
-        assert b'New Task' in response.data
+    # Primeiro fazer login
+    client.post('/login', data={
+        'username': test_user.username,
+        'password': 'testpass'
+    }, follow_redirects=True)
+    
+    # Adicionar tarefa
+    response = client.post('/add_task', data={
+        'title': 'New Task',
+        'description': 'Task description'
+    }, follow_redirects=True)
+    
+    assert response.status_code == 200
+    assert b'New Task' in response.data
 
 @pytest.mark.integration
 def test_admin_dashboard(client, test_user):
     """Test admin dashboard"""
-    # Garantir que o usuário esteja na sessão atual e defini-lo como admin
+    # Definir o usuário como admin no contexto apropriado
     with app.app_context():
-        db.session.refresh(test_user)
-        test_user.is_admin = True
+        # Recuperar o usuário para garantir que esteja na sessão atual
+        user = MainUser.query.filter_by(username="testuser").first()
+        user.is_admin = True
         db.session.commit()
-        db.session.refresh(test_user)  # Recarregar após a alteração
-        
-        # Primeiro login
-        client.post('/login', data={
-            'username': test_user.username,
-            'password': 'testpass'
-        }, follow_redirects=True)
-        
-        # Testar dashboard admin
-        response = client.get('/admin')
-        assert response.status_code == 200
-        assert b'Admin Dashboard' in response.data
+    
+    # Fazer login
+    client.post('/login', data={
+        'username': test_user.username,
+        'password': 'testpass'
+    }, follow_redirects=True)
+    
+    # Testar o dashboard admin
+    response = client.get('/admin')
+    assert response.status_code == 200
+    assert b'Admin Dashboard' in response.data

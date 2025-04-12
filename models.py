@@ -1,3 +1,16 @@
+# Re-export dos modelos do models_manager
+# Este arquivo é mantido para compatibilidade com código existente
+
+from models_manager import MainUser as User
+from models_manager import MainTask as Task
+from models_manager import MainSystemLog as SystemLog
+
+# Re-export das funções auxiliares
+from models_manager import setup_test_db, cleanup_test_db
+
+# Note: as classes originais (OldUser, OldTask, OldSystemLog) são mantidas abaixo
+# apenas para compatibilidade com código legado que possa depender delas
+
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func

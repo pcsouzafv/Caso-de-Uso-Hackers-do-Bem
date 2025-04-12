@@ -63,8 +63,8 @@ def test_task_workflow(test_client):
         assert task is not None
         task_id = task.id
 
-    # Marcar como concluída - usando GET em vez de POST
-    response = test_client.get(f"/toggle_task/{task_id}")
+    # Marcar como concluída - usando POST já que a rota aceita apenas POST
+    response = test_client.post(f"/toggle_task/{task_id}")
     assert response.status_code == 200
 
     # Verificar se foi marcada
