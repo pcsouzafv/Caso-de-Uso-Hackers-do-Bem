@@ -20,6 +20,9 @@ from database import Base, db
 
 # Modelos para a API FastAPI
 class OldUser(Base):
+    """Modelo antigo de usuário para API FastAPI.
+    Mantido por compatibilidade com código legado.
+    """
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -28,8 +31,8 @@ class OldUser(Base):
     password_hash = Column(String(128), nullable=False)
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), onupdate=text("NOW()"))
     
     tasks = relationship("OldTask", back_populates="owner")
     logs = relationship("OldSystemLog", back_populates="user")
@@ -44,6 +47,9 @@ class OldUser(Base):
         return f"<User {self.username}>"
 
 class OldTask(Base):
+    """Modelo antigo de tarefa para API FastAPI.
+    Mantido por compatibilidade com código legado.
+    """
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -51,8 +57,8 @@ class OldTask(Base):
     description = Column(Text)
     due_date = Column(DateTime)
     completed = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), onupdate=text("NOW()"))
     owner_id = Column(Integer, ForeignKey("users.id"))
     
     owner = relationship("OldUser", back_populates="tasks")
@@ -61,12 +67,15 @@ class OldTask(Base):
         return f"<Task {self.title}>"
 
 class OldSystemLog(Base):
+    """Modelo antigo de log do sistema para API FastAPI.
+    Mantido por compatibilidade com código legado.
+    """
     __tablename__ = "system_logs"
 
     id = Column(Integer, primary_key=True, index=True)
     action = Column(String(255), nullable=False)
     details = Column(Text)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
     user_id = Column(Integer, ForeignKey("users.id"))
     
     user = relationship("OldUser", back_populates="logs")
