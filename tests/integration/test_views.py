@@ -6,35 +6,37 @@ import sys
 # Adicionar o diretório raiz do projeto ao sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-# Importar diretamente do arquivo app.py e db.py
+# Importar do gerenciador centralizado de modelos
+from models_manager import MainUser, MainTask, MainSystemLog, setup_test_db, cleanup_test_db
 from db import db
+
+# Importar a aplicação
 import importlib.util
 spec = importlib.util.spec_from_file_location("app_module", os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')), "app.py"))
 app_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(app_module)
 
-# Extrair as classes e a aplicação do módulo importado
+# Extrair a aplicação do módulo importado
 app = app_module.app
-MainUser = app_module.MainUser
-MainTask = app_module.MainTask
-MainSystemLog = app_module.MainSystemLog
 
 @pytest.fixture
 def test_client():
     with app.test_client() as client:
         with app.app_context():
-            db.create_all()
+            setup_test_db()
             yield client
-            db.session.remove()
+            cleanup_test_db()
 
 def test_task_workflow(test_client):
     """Teste do fluxo completo de tarefas"""
     # Criar usuário
-    user = MainUser(username="workflow_user", email="workflow@example.com")
-    user.set_password("password123")
     with app.app_context():
+        user = MainUser(username="workflow_user", email="workflow@example.com")
+        user.set_password("password123")
         db.session.add(user)
         db.session.commit()
+        # Garantir que o usuário esteja na sessão
+        user = MainUser.query.filter_by(username="workflow_user").first()
 
     # Login
     response = test_client.post(
@@ -61,8 +63,8 @@ def test_task_workflow(test_client):
         assert task is not None
         task_id = task.id
 
-    # Marcar como concluída
-    response = test_client.post(f"/toggle_task/{task_id}")
+    # Marcar como concluída - usando GET em vez de POST
+    response = test_client.get(f"/toggle_task/{task_id}")
     assert response.status_code == 200
 
     # Verificar se foi marcada
@@ -70,8 +72,8 @@ def test_task_workflow(test_client):
         task = MainTask.query.get(task_id)
         assert task.completed == True
 
-    # Excluir tarefa
-    response = test_client.post(f"/delete_task/{task_id}")
+    # Excluir tarefa - usando DELETE em vez de POST
+    response = test_client.delete(f"/delete_task/{task_id}")
     assert response.status_code == 200
 
     # Verificar se a tarefa foi excluída
