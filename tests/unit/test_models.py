@@ -16,9 +16,9 @@ app_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(app_module)
 
 # Extrair os modelos e a aplicação do módulo importado
-User = app_module.User
-Task = app_module.Task
-SystemLog = app_module.SystemLog
+MainUser = app_module.MainUser
+MainTask = app_module.MainTask
+MainSystemLog = app_module.MainSystemLog
 app = app_module.app
 
 # Fixture que configura o banco de dados para os testes
@@ -29,20 +29,20 @@ def setup_database():
         db.create_all()
         
         # Verificar se o banco de dados já tem dados
-        existing_admin = User.query.filter_by(username='admin').first()
-        existing_testuser = User.query.filter_by(username='testuser').first()
+        existing_admin = MainUser.query.filter_by(username='admin').first()
+        existing_testuser = MainUser.query.filter_by(username='testuser').first()
         
         # Obter ou criar usuário de teste
         if existing_testuser:
             user = existing_testuser
         else:
-            user = User(username="testuser", email="testuser@example.com", is_admin=False)
+            user = MainUser(username="testuser", email="testuser@example.com", is_admin=False)
             user.set_password("testpass")
             db.session.add(user)
             db.session.commit()
         
         # Criar tarefa de teste
-        task = Task(
+        task = MainTask(
             title="Test Task",
             description="Test description",
             completed=False,
@@ -51,7 +51,7 @@ def setup_database():
         db.session.add(task)
         
         # Criar log de sistema de teste
-        log = SystemLog(
+        log = MainSystemLog(
             action="Test action",
             details="Test details",
             user_id=user.id
@@ -64,8 +64,8 @@ def setup_database():
         yield
         
         # Limpeza após os testes (não removemos o admin padrão)
-        tasks_to_remove = Task.query.filter_by(title="Test Task").all()
-        logs_to_remove = SystemLog.query.filter_by(action="Test action").all()
+        tasks_to_remove = MainTask.query.filter_by(title="Test Task").all()
+        logs_to_remove = MainSystemLog.query.filter_by(action="Test action").all()
         
         for task in tasks_to_remove:
             db.session.delete(task)
@@ -79,7 +79,7 @@ def setup_database():
 def test_user_creation(setup_database):
     """Test user creation"""
     with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
+        user = MainUser.query.filter_by(username="testuser").first()
         assert user is not None
         assert user.username == 'testuser'
         assert user.email == 'testuser@example.com'
@@ -91,8 +91,8 @@ def test_user_creation(setup_database):
 def test_task_creation(setup_database):
     """Test task creation"""
     with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
-        task = Task.query.filter_by(user_id=user.id).first()
+        user = MainUser.query.filter_by(username="testuser").first()
+        task = MainTask.query.filter_by(user_id=user.id).first()
         assert task is not None
         assert task.title == 'Test Task'
         assert task.description == 'Test description'
@@ -104,8 +104,8 @@ def test_task_creation(setup_database):
 def test_system_log_creation(setup_database):
     """Test system log creation"""
     with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
-        log = SystemLog.query.filter_by(user_id=user.id).first()
+        user = MainUser.query.filter_by(username="testuser").first()
+        log = MainSystemLog.query.filter_by(user_id=user.id).first()
         assert log is not None
         assert log.action == 'Test action'
         assert log.details == 'Test details'
@@ -116,7 +116,7 @@ def test_system_log_creation(setup_database):
 def test_user_relationships(setup_database):
     """Test user relationships with tasks and logs"""
     with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
+        user = MainUser.query.filter_by(username="testuser").first()
         
         # Verifica se há pelo menos uma tarefa e logs associados ao usuário
         assert len(user.tasks) > 0
@@ -142,14 +142,14 @@ def test_user_relationships(setup_database):
 def test_task_relationships(setup_database):
     """Test task relationships with user"""
     with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
-        task = Task.query.filter_by(user_id=user.id, title="Test Task").first()
+        user = MainUser.query.filter_by(username="testuser").first()
+        task = MainTask.query.filter_by(user_id=user.id, title="Test Task").first()
         assert task.user.username == 'testuser'
 
 @pytest.mark.unit
 def test_system_log_relationships(setup_database):
     """Test system log relationships with user"""
     with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
-        log = SystemLog.query.filter_by(user_id=user.id, action="Test action").first()
+        user = MainUser.query.filter_by(username="testuser").first()
+        log = MainSystemLog.query.filter_by(user_id=user.id, action="Test action").first()
         assert log.user.username == 'testuser'

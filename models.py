@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from database import Base, db
 
 # Modelos para a API FastAPI
-class User(Base):
+class OldUser(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -18,8 +18,8 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    tasks = relationship("Task", back_populates="owner")
-    logs = relationship("SystemLog", back_populates="user")
+    tasks = relationship("OldTask", back_populates="owner")
+    logs = relationship("OldSystemLog", back_populates="user")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -30,7 +30,7 @@ class User(Base):
     def __repr__(self):
         return f"<User {self.username}>"
 
-class Task(Base):
+class OldTask(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -42,12 +42,12 @@ class Task(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     owner_id = Column(Integer, ForeignKey("users.id"))
     
-    owner = relationship("User", back_populates="tasks")
+    owner = relationship("OldUser", back_populates="tasks")
 
     def __repr__(self):
         return f"<Task {self.title}>"
 
-class SystemLog(Base):
+class OldSystemLog(Base):
     __tablename__ = "system_logs"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -56,7 +56,7 @@ class SystemLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     user_id = Column(Integer, ForeignKey("users.id"))
     
-    user = relationship("User", back_populates="logs")
+    user = relationship("OldUser", back_populates="logs")
 
     def __repr__(self):
         return f"<SystemLog {self.action}>"

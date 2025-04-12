@@ -38,14 +38,15 @@ def create_app(config=None):
 app = create_app()
 
 # Definição dos modelos
-class User(db.Model, UserMixin):
+class MainUser(db.Model, UserMixin):
+    __tablename__ = "main_users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
-    tasks = db.relationship('Task', backref='user', lazy=True, cascade="all, delete-orphan")
-    system_logs = db.relationship('SystemLog', backref='user', lazy=True)
+    tasks = db.relationship('MainTask', backref='user', lazy=True, cascade="all, delete-orphan")
+    system_logs = db.relationship('MainSystemLog', backref='user', lazy=True)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -53,7 +54,8 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-class Task(db.Model):
+class MainTask(db.Model):
+    __tablename__ = "main_tasks"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
@@ -61,18 +63,19 @@ class Task(db.Model):
     completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('main_users.id'), nullable=False)
 
-class SystemLog(db.Model):
+class MainSystemLog(db.Model):
+    __tablename__ = "main_system_logs"
     id = db.Column(db.Integer, primary_key=True)
     action = db.Column(db.String(200), nullable=False)
     details = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('main_users.id'), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return MainUser.query.get(int(user_id))
 
 @app.route("/")
 @login_required
@@ -81,8 +84,8 @@ def index():
         return redirect(url_for("admin_dashboard"))
 
     tasks = (
-        Task.query.filter_by(user_id=current_user.id)
-        .order_by(Task.created_at.desc())
+        MainTask.query.filter_by(user_id=current_user.id)
+        .order_by(MainTask.created_at.desc())
         .all()
     )
 
@@ -107,11 +110,11 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        user = User.query.filter_by(username=username).first()
+        user = MainUser.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
             login_user(user)
-            log = SystemLog(action=f"Usuário {username} fez login", user_id=user.id)
+            log = MainSystemLog(action=f"Usuário {username} fez login", user_id=user.id)
             db.session.add(log)
             db.session.commit()
             return redirect(url_for("index"))
@@ -123,7 +126,7 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
-    log = SystemLog(
+    log = MainSystemLog(
         action=f"Usuário {current_user.username} fez logout", user_id=current_user.id
     )
     db.session.add(log)
@@ -147,15 +150,15 @@ def register():
             flash('Senhas não coincidem', 'error')
             return redirect(url_for('register'))
             
-        if User.query.filter_by(username=username).first():
+        if MainUser.query.filter_by(username=username).first():
             flash('Nome de usuário já existe', 'error')
             return redirect(url_for('register'))
             
-        if User.query.filter_by(email=email).first():
+        if MainUser.query.filter_by(email=email).first():
             flash('Email já cadastrado', 'error')
             return redirect(url_for('register'))
             
-        user = User(
+        user = MainUser(
             username=username,
             email=email,
         )
@@ -175,9 +178,9 @@ def admin_dashboard():
     if not current_user.is_admin:
         return redirect(url_for("index"))
 
-    users = User.query.all()
-    tasks = Task.query.all()
-    logs = SystemLog.query.order_by(SystemLog.timestamp.desc()).limit(50).all()
+    users = MainUser.query.all()
+    tasks = MainTask.query.all()
+    logs = MainSystemLog.query.order_by(MainSystemLog.timestamp.desc()).limit(50).all()
 
     return render_template("admin_dashboard.html", users=users, tasks=tasks, logs=logs)
 
@@ -193,7 +196,7 @@ def add_task():
         flash("O título é obrigatório")
         return redirect(url_for("index"))
 
-    task = Task(title=title, description=description, user_id=current_user.id)
+    task = MainTask(title=title, description=description, user_id=current_user.id)
 
     if due_date_str:
         try:
@@ -203,7 +206,7 @@ def add_task():
             return redirect(url_for("index"))
 
     db.session.add(task)
-    log = SystemLog(
+    log = MainSystemLog(
         action=f"Tarefa '{title}' criada por {current_user.username}",
         user_id=current_user.id,
         details="Nova tarefa adicionada"
@@ -217,14 +220,14 @@ def add_task():
 @app.route("/toggle_task/<int:task_id>", methods=["POST"])
 @login_required
 def toggle_task(task_id):
-    task = Task.query.get_or_404(task_id)
+    task = MainTask.query.get_or_404(task_id)
     if task.user_id != current_user.id and not current_user.is_admin:
         abort(403)
 
     task.completed = not task.completed
     db.session.commit()
 
-    log = SystemLog(
+    log = MainSystemLog(
         action=f'Tarefa "{task.title}" {"concluída" if task.completed else "reaberta"} por {current_user.username}',
         user_id=current_user.id,
         details=f"Status da tarefa alterado para {task.completed}"
@@ -238,11 +241,11 @@ def toggle_task(task_id):
 @app.route("/delete_task/<int:task_id>", methods=["DELETE"])
 @login_required
 def delete_task(task_id):
-    task = Task.query.get_or_404(task_id)
+    task = MainTask.query.get_or_404(task_id)
     if task.user_id != current_user.id and not current_user.is_admin:
         abort(403)
 
-    log = SystemLog(
+    log = MainSystemLog(
         action=f'Tarefa "{task.title}" excluída por {current_user.username}',
         user_id=current_user.id,
         details="Tarefa removida permanentemente"
@@ -265,15 +268,15 @@ def add_user():
     password = request.form.get("password")
     is_admin = request.form.get("is_admin") == "on"
 
-    if User.query.filter_by(username=username).first():
+    if MainUser.query.filter_by(username=username).first():
         flash("Nome de usuário já existe")
         return redirect(url_for("admin_dashboard"))
 
-    user = User(username=username, email=email, is_admin=is_admin)
+    user = MainUser(username=username, email=email, is_admin=is_admin)
     user.set_password(password)
 
     db.session.add(user)
-    log = SystemLog(action=f"Usuário {username} criado", user_id=current_user.id)
+    log = MainSystemLog(action=f"Usuário {username} criado", user_id=current_user.id)
     db.session.add(log)
     db.session.commit()
 
@@ -286,12 +289,12 @@ def delete_user(user_id):
     if not current_user.is_admin:
         abort(403)
 
-    user = User.query.get_or_404(user_id)
+    user = MainUser.query.get_or_404(user_id)
     if user.id == current_user.id:
         abort(400)  # Não pode deletar a si mesmo
 
     db.session.delete(user)
-    log = SystemLog(
+    log = MainSystemLog(
         action=f"Usuário {user.username} foi deletado por {current_user.username}",
         user_id=current_user.id,
     )
@@ -307,9 +310,9 @@ if __name__ == "__main__":
         db.create_all()
         
         # Criar usuário admin se não existir
-        admin_user = User.query.filter_by(username="admin").first()
+        admin_user = MainUser.query.filter_by(username="admin").first()
         if not admin_user:
-            admin_user = User(
+            admin_user = MainUser(
                 username="admin",
                 email="admin@example.com",
                 is_admin=True
@@ -319,7 +322,7 @@ if __name__ == "__main__":
             db.session.commit()
             
             # Criar log
-            log = SystemLog(
+            log = MainSystemLog(
                 action="Admin user created",
                 details="Initial admin user created during app initialization",
                 user_id=admin_user.id
