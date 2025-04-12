@@ -1,46 +1,44 @@
+import os
 from datetime import datetime
+from pathlib import Path
 
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    jsonify,
-    abort,
-)
+from flask import (Flask, abort, flash, jsonify, redirect, render_template,
+                   request, url_for)
+from flask_login import (LoginManager, UserMixin, current_user, login_required,
+                         login_user, logout_user)
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    login_user,
-    login_required,
-    logout_user,
-    current_user,
-)
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
+# Inicialização das extensões antes de configurar o app
+db = SQLAlchemy()
+login_manager = LoginManager()
+
+# Criação do app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "your-secret-key"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///task_manager.db"
+app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY', 'dev-key-please-change-in-production')
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskmanager.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-db = SQLAlchemy(app)
+# Inicialização das extensões com o app
+db.init_app(app)
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-class User(UserMixin, db.Model):
+# Definição dos modelos
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
-    tasks = db.relationship("Task", backref="user", lazy=True)
-
+    tasks = db.relationship('Task', backref='user', lazy=True, cascade="all, delete-orphan")
+    system_logs = db.relationship('SystemLog', backref='user', lazy=True)
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-
+    
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -48,26 +46,20 @@ class Task(db.Model):
     description = db.Column(db.Text)
     due_date = db.Column(db.DateTime)
     completed = db.Column(db.Boolean, default=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class SystemLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    action = db.Column(db.String(100), nullable=False)
+    action = db.Column(db.String(200), nullable=False)
+    details = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
 
 @app.route("/")
 @login_required
@@ -96,6 +88,9 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+        
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -126,6 +121,9 @@ def logout():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+        
     if request.method == "POST":
         username = request.form.get("username")
         email = request.form.get("email")
@@ -133,11 +131,15 @@ def register():
         confirm_password = request.form.get("confirm_password")
         
         if password != confirm_password:
-            flash('Passwords do not match', 'error')
+            flash('Senhas não coincidem', 'error')
             return redirect(url_for('register'))
             
         if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'error')
+            flash('Nome de usuário já existe', 'error')
+            return redirect(url_for('register'))
+            
+        if User.query.filter_by(email=email).first():
+            flash('Email já cadastrado', 'error')
             return redirect(url_for('register'))
             
         user = User(
@@ -191,6 +193,7 @@ def add_task():
     log = SystemLog(
         action=f"Tarefa '{title}' criada por {current_user.username}",
         user_id=current_user.id,
+        details="Nova tarefa adicionada"
     )
     db.session.add(log)
     db.session.commit()
@@ -199,6 +202,7 @@ def add_task():
 
 
 @app.route("/toggle_task/<int:task_id>", methods=["POST"])
+@login_required
 def toggle_task(task_id):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id and not current_user.is_admin:
@@ -210,6 +214,7 @@ def toggle_task(task_id):
     log = SystemLog(
         action=f'Tarefa "{task.title}" {"concluída" if task.completed else "reaberta"} por {current_user.username}',
         user_id=current_user.id,
+        details=f"Status da tarefa alterado para {task.completed}"
     )
     db.session.add(log)
     db.session.commit()
@@ -218,6 +223,7 @@ def toggle_task(task_id):
 
 
 @app.route("/delete_task/<int:task_id>", methods=["DELETE"])
+@login_required
 def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
     if task.user_id != current_user.id and not current_user.is_admin:
@@ -226,6 +232,7 @@ def delete_task(task_id):
     log = SystemLog(
         action=f'Tarefa "{task.title}" excluída por {current_user.username}',
         user_id=current_user.id,
+        details="Tarefa removida permanentemente"
     )
     db.session.add(log)
     db.session.delete(task)
@@ -241,6 +248,7 @@ def add_user():
         return redirect(url_for("index"))
 
     username = request.form.get("username")
+    email = request.form.get("email", f"{username}@example.com")
     password = request.form.get("password")
     is_admin = request.form.get("is_admin") == "on"
 
@@ -248,7 +256,7 @@ def add_user():
         flash("Nome de usuário já existe")
         return redirect(url_for("admin_dashboard"))
 
-    user = User(username=username, is_admin=is_admin)
+    user = User(username=username, email=email, is_admin=is_admin)
     user.set_password(password)
 
     db.session.add(user)
@@ -259,7 +267,7 @@ def add_user():
     return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/user/delete/<user_id>", methods=["POST"])
+@app.route("/user/delete/<int:user_id>", methods=["POST"])
 @login_required
 def delete_user(user_id):
     if not current_user.is_admin:
@@ -280,17 +288,30 @@ def delete_user(user_id):
     return jsonify({"success": True})
 
 
-def create_admin():
-    with app.app_context():
-        db.create_all()
-        admin = User.query.filter_by(username="admin").first()
-        if not admin:
-            admin = User(username="admin", is_admin=True)
-            admin.set_password("admin")
-            db.session.add(admin)
-            db.session.commit()
-
-
 if __name__ == "__main__":
-    create_admin()
+    with app.app_context():
+        # Inicializar o banco de dados
+        db.create_all()
+        
+        # Criar usuário admin se não existir
+        admin_user = User.query.filter_by(username="admin").first()
+        if not admin_user:
+            admin_user = User(
+                username="admin",
+                email="admin@example.com",
+                is_admin=True
+            )
+            admin_user.set_password("admin")
+            db.session.add(admin_user)
+            db.session.commit()
+            
+            # Criar log
+            log = SystemLog(
+                action="Admin user created",
+                details="Initial admin user created during app initialization",
+                user_id=admin_user.id
+            )
+            db.session.add(log)
+            db.session.commit()
+    
     app.run(host="0.0.0.0", port=8080, debug=True)

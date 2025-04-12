@@ -1,10 +1,11 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from database import Base
-from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from database import Base, db
 
+# Modelos para a API FastAPI
 class User(Base):
     __tablename__ = "users"
 
@@ -13,7 +14,10 @@ class User(Base):
     email = Column(String(120), unique=True, index=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
     is_admin = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
     tasks = relationship("Task", back_populates="owner")
     logs = relationship("SystemLog", back_populates="user")
 
@@ -22,6 +26,9 @@ class User(Base):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"<User {self.username}>"
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -34,14 +41,22 @@ class Task(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     owner_id = Column(Integer, ForeignKey("users.id"))
+    
     owner = relationship("User", back_populates="tasks")
+
+    def __repr__(self):
+        return f"<Task {self.title}>"
 
 class SystemLog(Base):
     __tablename__ = "system_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    action = Column(String(50), nullable=False)
+    action = Column(String(255), nullable=False)
     details = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     user_id = Column(Integer, ForeignKey("users.id"))
+    
     user = relationship("User", back_populates="logs")
+
+    def __repr__(self):
+        return f"<SystemLog {self.action}>"

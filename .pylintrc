@@ -1,0 +1,28 @@
+[MASTER]
+
+# Add any additional directories to the Python path
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+
+# Disable the message, report, category or checker with the given id(s). You can
+# either give multiple identifiers separated by comma (,) or put this option
+# multiple times (only on the command line, not in the configuration file where
+# it should appear only once).
+disable=W0611,C0114,C0116
+
+[FORMAT]
+
+# Specify a line length for long lines warnings.
+max-line-length=100
+
+[BASIC]
+
+# List of builtins function names that should not be used, separated by a comma.
+bad-names=foo,bar,baz,toto,tutu,tata
+
+[REPORTS]
+
+# Set the output format. Available formats are text, parseable, colorized, msvs
+# (Visual Studio) and html.
+output-format=colorized

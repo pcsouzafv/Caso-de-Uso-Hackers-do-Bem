@@ -49,153 +49,130 @@
 
         <!-- Abas -->
         <div class="tabs">
-            <button class="tab-btn active" data-tab="users">Usuários</button>
-            <button class="tab-btn" data-tab="tasks">Tarefas</button>
-            <button class="tab-btn" data-tab="logs">Logs</button>
+            <button class="tab-btn active" data-tab="users">
+                <i class="fas fa-users"></i>
+                Usuários
+            </button>
+            <button class="tab-btn" data-tab="tasks">
+                <i class="fas fa-tasks"></i>
+                Tarefas
+            </button>
+            <button class="tab-btn" data-tab="logs">
+                <i class="fas fa-history"></i>
+                Logs do Sistema
+            </button>
         </div>
 
         <!-- Conteúdo das Abas -->
-        <div class="tab-content active" id="users">
-            <div class="content-header">
+        <section id="users" class="tab-content active">
+            <div class="card">
                 <h2>Gerenciar Usuários</h2>
-                <button class="btn btn-primary" data-modal-trigger="add-user">
-                    <i class="fas fa-user-plus"></i>
-                    Adicionar Usuário
-                </button>
-            </div>
-
-            <div class="users-list">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Usuário</th>
-                            <th>Email</th>
-                            <th>Admin</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>
-                                <div class="checkbox-wrapper">
-                                    <input type="checkbox" id="admin-{{ user.id }}" 
-                                           {% if user.is_admin %}checked{% endif %}
-                                           data-user-id="{{ user.id }}">
-                                    <label for="admin-{{ user.id }}">
-                                        <span class="custom-checkbox"></span>
-                                        Administrador
-                                    </label>
-                                </div>
-                            </td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" 
-                                        onclick="deleteUser({{ user.id }})">
-                                    <i class="fas fa-trash"></i>
-                                    Excluir
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="tab-content" id="tasks">
-            <div class="content-header">
-                <h2>Gerenciar Tarefas</h2>
-            </div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Título</th>
-                        <th>Descrição</th>
-                        <th>Usuário</th>
-                        <th>Status</th>
-                        <th>Data de Criação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for task in tasks %}
-                    <tr>
-                        <td>{{ task.title }}</td>
-                        <td>{{ task.description }}</td>
-                        <td>{{ task.user.username }}</td>
-                        <td>
-                            <span class="status-badge {% if task.completed %}completed{% else %}pending{% endif %}">
-                                {% if task.completed %}Concluída{% else %}Pendente{% endif %}
-                            </span>
-                        </td>
-                        <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="tab-content" id="logs">
-            <div class="content-header">
-                <h2>Logs do Sistema</h2>
-            </div>
-            <div class="logs-list">
-                {% for log in logs %}
-                <div class="log-item">
-                    <div class="log-meta">
-                        <span class="log-date">{{ log.timestamp.strftime('%d/%m/%Y %H:%M') }}</span>
-                        <span class="log-user">{{ log.user.username }}</span>
+                <form action="{{ url_for('add_user') }}" method="POST" class="user-form">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="Nome de usuário" required>
                     </div>
-                    <div class="log-action">{{ log.action }}</div>
-                    <div class="log-details">{{ log.details }}</div>
+                    <div class="form-group">
+                        <input type="password" name="password" placeholder="Senha" required>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" name="is_admin" id="is_admin" class="sr-only">
+                        <label for="is_admin">
+                            <span class="custom-checkbox"></span>
+                            Conceder privilégios de administrador
+                        </label>
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-user-plus"></i>
+                        Adicionar Usuário
+                    </button>
+                </form>
+
+                <div class="user-list">
+                    {% for user in users %}
+                    <div class="user-item">
+                        <div class="user-info">
+                            <span>{{ user.username }}</span>
+                            <span class="user-role {% if user.is_admin %}admin-role{% endif %}">
+                                {{ 'Administrador' if user.is_admin else 'Usuário' }}
+                            </span>
+                        </div>
+                        <div class="user-actions">
+                            {% if user.id != current_user.id %}
+                            <button class="btn btn-icon btn-danger" onclick="deleteUser('{{ user.id }}')" title="Excluir usuário">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
+        </section>
+
+        <section id="tasks" class="tab-content">
+            <div class="card">
+                <h2>Todas as Tarefas</h2>
+                <div class="task-list">
+                    {% for task in tasks %}
+                    <div class="task-item {% if task.completed %}completed{% endif %}">
+                        <div class="task-info">
+                            <span class="task-title">{{ task.title }}</span>
+                            <small>por {{ task.user.username }}</small>
+                            {% if task.description %}
+                            <p class="task-description">{{ task.description }}</p>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span class="task-due-date">
+                                <i class="fas fa-calendar"></i> {{ task.due_date.strftime('%d/%m/%Y') }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn btn-icon btn-success" onclick="toggleTaskStatus('{{ task.id }}')" title="Alternar status">
+                                <i class="fas {% if task.completed %}fa-times{% else %}fa-check{% endif %}"></i>
+                            </button>
+                            <button class="btn btn-icon btn-danger" onclick="deleteTask('{{ task.id }}')" title="Excluir tarefa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section id="logs" class="tab-content">
+            <div class="card">
+                <h2>Logs do Sistema</h2>
+                <div class="log-list">
+                    {% for log in logs %}
+                    <div class="log-item">
+                        <span class="log-timestamp">{{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</span>
+                        <span class="log-action">{{ log.action }}</span>
+                        {% if log.user %}
+                        <span class="log-user">por {{ log.user.username }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
     </main>
 
-    <!-- Modal Adicionar Usuário -->
-    <div class="modal" id="add-user-modal">
-        <div class="modal-content">
-            <h2>Adicionar Novo Usuário</h2>
-            <form method="POST" action="{{ url_for('add_user') }}">
-                <div class="form-group">
-                    <label for="username">Usuário:</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Senha:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirm_password">Confirmar Senha:</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="is_admin" value="true">
-                        Administrador
-                    </label>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Salvar
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-modal-close="add-user">
-                        <i class="fas fa-times"></i>
-                        Cancelar
-                    </button>
-                </div>
-            </form>
+    <footer>
+        <div class="footer-container">
+            <p>Siga Ricardo Souza:</p>
+            <p>
+                <a href="https://www.linkedin.com/in/pcricardo2024/" target="_blank" rel="noopener">LinkedIn</a> |
+                <a href="https://github.com/pcsouzafv" target="_blank" rel="noopener">GitHub</a>
+            </p>
+            <p>Desenvolvido por <strong>Ricardo Souza</strong> - Especialização DevSecOps</p>
+            <p>Professora: <a href="https://www.linkedin.com/in/helena-carreco/" target="_blank" rel="noopener">Helena Carreço</a></p>
         </div>
-    </div>
+    </footer>
 
-    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <div id="toast" class="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

@@ -152,7 +152,7 @@ async function deleteTask(taskId) {
 
     try {
         const response = await fetch(`/delete_task/${taskId}`, {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
             }
