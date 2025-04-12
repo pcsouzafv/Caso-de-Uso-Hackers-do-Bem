@@ -13,6 +13,9 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
 
+# Importando a instância singleton do SQLAlchemy
+from db import db
+
 # Configurar logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -25,12 +28,12 @@ def test_app():
     """Fixture que configura o app de teste"""
     try:
         # Tenta importar da versão principal (porta 8080)
-        from app import create_app, db
+        from app import create_app
         app = create_app('testing')
     except (ImportError, TypeError):
         try:
             # Se falhar, tenta importar da versão task_manager (porta 5000)
-            from task_manager import create_app, db
+            from task_manager import create_app
             app = create_app(test_config={'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'})
         except ImportError:
             pytest.fail("Não foi possível importar create_app de nenhum módulo.")
@@ -63,10 +66,6 @@ def test_user(test_app):
             except ImportError:
                 pytest.fail("Não foi possível importar User de nenhum módulo.")
     
-    from flask_sqlalchemy import SQLAlchemy
-    db = SQLAlchemy()
-    db.init_app(test_app)
-    
     with test_app.app_context():
         user = User(username="testuser", email="testuser@example.com")
         user.set_password("testpass")
@@ -91,10 +90,6 @@ def test_task(test_app, test_user):
             except ImportError:
                 pytest.fail("Não foi possível importar Task de nenhum módulo.")
     
-    from flask_sqlalchemy import SQLAlchemy
-    db = SQLAlchemy()
-    db.init_app(test_app)
-    
     with test_app.app_context():
         task = Task(title="Test Task", description="Test description", user_id=test_user.id)
         db.session.add(task)
@@ -117,10 +112,6 @@ def test_system_log(test_app, test_user):
                 from models import SystemLog
             except ImportError:
                 pytest.fail("Não foi possível importar SystemLog de nenhum módulo.")
-    
-    from flask_sqlalchemy import SQLAlchemy
-    db = SQLAlchemy()
-    db.init_app(test_app)
     
     with test_app.app_context():
         log = SystemLog(action="Test action", details="Test details", user_id=test_user.id)

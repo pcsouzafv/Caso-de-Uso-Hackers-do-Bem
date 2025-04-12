@@ -6,11 +6,12 @@ from flask import (Flask, abort, flash, jsonify, redirect, render_template,
                    request, url_for)
 from flask_login import (LoginManager, UserMixin, current_user, login_required,
                          login_user, logout_user)
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
-# Inicialização das extensões antes de configurar o app
-db = SQLAlchemy()
+# Importando a instância singleton do SQLAlchemy
+from db import db
+
+# Inicialização do LoginManager
 login_manager = LoginManager()
 
 # Função factory para compatibilidade com os testes

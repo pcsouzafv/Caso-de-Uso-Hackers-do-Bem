@@ -1,5 +1,5 @@
 from flask import Flask
-from . import db
+from db import db
 
 def create_app():
     """Factory que cria e configura a aplicação Flask"""
