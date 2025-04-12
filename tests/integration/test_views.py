@@ -19,12 +19,15 @@ spec.loader.exec_module(app_module)
 # Extrair a aplicação do módulo importado
 app = app_module.app
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def test_client():
     with app.test_client() as client:
         with app.app_context():
+            # Usar as funções do models_manager para configuração limpa
             setup_test_db()
             yield client
+            # Fechar todas as sessões e limpar o banco de dados
+            db.session.close_all()
             cleanup_test_db()
 
 def test_task_workflow(test_client):

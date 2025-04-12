@@ -18,48 +18,43 @@ spec.loader.exec_module(app_module)
 # Extrair a aplicação do módulo importado
 app = app_module.app
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def client():
+    # Criar o cliente de teste
     with app.test_client() as client:
+        # Configurar o banco de dados em um contexto da aplicação
         with app.app_context():
+            # Limpar e criar tabelas
             setup_test_db()
             yield client
+            # Limpar banco de dados após o teste
+            db.session.close_all()
             cleanup_test_db()
 
-@pytest.fixture
-def test_user():
+@pytest.fixture(scope="function")
+def test_user(client):
     """Cria um usuário de teste na sessão do banco de dados.
-    Importante: este fixture deve ser usado APENAS dentro de um contexto app.app_context().
+    Importante: este fixture depende de client para garantir o contexto do banco de dados.
     """
-    # Criar o usuário - importante que isso seja feito FORA de app_context
-    # para garantir que o usuário seja criado, mas não vincule a sessão atual
-    user = MainUser(username="testuser", email="testuser@example.com")
-    user.set_password("testpass")
-    
-    # Dentro de app_context, salvamos o usuário e o recuperamos para garantir
-    # que ele seja persistido na sessão atual
     with app.app_context():
-        # Limpar qualquer usuário existente com o mesmo nome
+        # Limpar qualquer usuário existente
         existing = MainUser.query.filter_by(username="testuser").first()
         if existing:
             db.session.delete(existing)
             db.session.commit()
         
-        # Adicionar e persistir o novo usuário
+        # Criar novo usuário
+        user = MainUser(username="testuser", email="testuser@example.com")
+        user.set_password("testpass")
         db.session.add(user)
         db.session.commit()
         
-        # Importante: recuperar o usuário do banco para garantir que ele esteja
-        # vinculado à sessão atual
+        # Importante: recuperar novamente para ter uma instância limpa
         fresh_user = MainUser.query.filter_by(username="testuser").first()
+        yield fresh_user
         
-        yield fresh_user  # Retorna o usuário recuperado da sessão atual
-        
-        # Limpar após o teste
-        user_to_delete = MainUser.query.filter_by(username="testuser").first()
-        if user_to_delete:
-            db.session.delete(user_to_delete)
-            db.session.commit()
+        # Deixe a limpeza para a fixture client/cleanup_test_db
+        # Não tente deletar o usuário aqui para evitar conflitos
 
 @pytest.mark.integration
 def test_login_route(client):
