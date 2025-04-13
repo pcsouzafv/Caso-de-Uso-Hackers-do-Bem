@@ -148,5 +148,5 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 - [Documentação Geral](https://github.com/pcsouzafv/Caso-de-Uso-Hackers-do-Bem/blob/main/docs/DOCUMENTACAO.md)
 - [Guia de Segurança](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/GUIA_SEGURANCA.md)
-- [Guia de Contribuição](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/GUIA_CONTRIBUICAO.md)
+- [Guia de Contribuição](https://github.com/pcsouzafv/Caso-de-Uso-Hackers-do-Bem/blob/main/docs/GUIA_CONTRIBUICAO.md)
 - [Guia de Monitoramento](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/GUIA_MONITORAMENTO.md)
