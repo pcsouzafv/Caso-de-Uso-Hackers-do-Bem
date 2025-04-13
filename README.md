@@ -146,7 +146,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## Documentação Adicional
 
-- [Documentação Geral](https://github.com/pcsouzafv/Task-Manager-using-Flask/blob/main/docs/DOCUMENTACAO.md)
-- [Guia de Segurança](https://github.com/pcsouzafv/Task-Manager-using-Flask/blob/main/docs/GUIA_SEGURANCA.md)
-- [Guia de Contribuição](https://github.com/pcsouzafv/Task-Manager-using-Flask/blob/main/docs/GUIA_CONTRIBUICAO.md)
-- [Guia de Monitoramento](https://github.com/pcsouzafv/Task-Manager-using-Flask/blob/main/docs/GUIA_MONITORAMENTO.md)
+- [Documentação Geral](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/DOCUMENTACAO.md)
+- [Guia de Segurança](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/GUIA_SEGURANCA.md)
+- [Guia de Contribuição](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/GUIA_CONTRIBUICAO.md)
+- [Guia de Monitoramento](https://github.com/pcsouzafv/Task-Manager-using-Flask/docs/GUIA_MONITORAMENTO.md)
